@@ -10,6 +10,7 @@
     "dist",
     ".output",
     "web",
+    "desktop",
     "src/routeTree.gen.ts",
     "src/worker-configuration.d.ts",
     "scripts"

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self'"
+    />
+    <title>OpenSEO Settings</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fafafa;
+        --fg: #18181b;
+        --muted: #71717a;
+        --border: #d4d4d8;
+        --field: #ffffff;
+        --accent: #18181b;
+        --accent-fg: #fafafa;
+        --danger: #b91c1c;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --fg: #fafafa;
+          --muted: #a1a1aa;
+          --border: #3f3f46;
+          --field: #18181b;
+          --accent: #fafafa;
+          --accent-fg: #09090b;
+          --danger: #f87171;
+        }
+      }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          14px/1.5 "Segoe UI",
+          system-ui,
+          sans-serif;
+        margin: 0;
+        padding: 28px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      .lead {
+        color: var(--muted);
+        margin: 0 0 22px;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin: 18px 0 6px;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin: 6px 0 0;
+      }
+      input[type="password"] {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 9px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--field);
+        color: var(--fg);
+        font: inherit;
+      }
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-weight: 400;
+      }
+      a {
+        color: inherit;
+      }
+      .actions {
+        margin-top: 26px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      button {
+        padding: 9px 18px;
+        border-radius: 6px;
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: var(--accent-fg);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .error {
+        color: var(--danger);
+        min-height: 20px;
+        margin-top: 12px;
+      }
+      .data {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 18px;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="title">Welcome to OpenSEO</h1>
+    <p class="lead" id="lead">
+      OpenSEO runs entirely on this PC. Add your DataForSEO key to get started.
+    </p>
+
+    <form id="form">
+      <label for="dataforseo">DataForSEO API key (Base64)</label>
+      <input
+        id="dataforseo"
+        type="password"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <p class="hint">
+        In
+        <a href="https://app.dataforseo.com/api-access" target="_blank"
+          >DataForSEO API Access</a
+        >, click “Send by email” and paste the Base64 credentials.
+        <span id="dfs-saved"></span>
+      </p>
+
+      <label for="openrouter">OpenRouter API key (optional)</label>
+      <input
+        id="openrouter"
+        type="password"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <p class="hint">
+        Turns on SAM, the in-app SEO agent. <span id="or-saved"></span>
+      </p>
+
+      <label class="check"
+        ><input id="telemetry" type="checkbox" /> Turn off the anonymous usage
+        heartbeat</label
+      >
+
+      <div class="error" id="error"></div>
+      <div class="actions">
+        <button id="save" type="submit">Save and start</button>
+      </div>
+    </form>
+    <p class="data">
+      Keys are encrypted with your Windows account. Data folder:
+      <span id="data-dir"></span>
+    </p>
+
+    <script src="setup.js"></script>
+  </body>
+</html>

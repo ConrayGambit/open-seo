@@ -17,3 +17,4 @@ drizzle/pg/
 planning/
 src/worker-configuration.d.ts
 web/
+desktop/release/
