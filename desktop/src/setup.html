@@ -15,6 +15,7 @@
         --muted: #71717a;
         --border: #d4d4d8;
         --field: #ffffff;
+        --panel: #f4f4f5;
         --accent: #18181b;
         --accent-fg: #fafafa;
         --danger: #b91c1c;
@@ -26,6 +27,7 @@
           --muted: #a1a1aa;
           --border: #3f3f46;
           --field: #18181b;
+          --panel: #18181b;
           --accent: #fafafa;
           --accent-fg: #09090b;
           --danger: #f87171;
@@ -39,30 +41,38 @@
           system-ui,
           sans-serif;
         margin: 0;
-        padding: 28px;
+        padding: 24px 28px 28px;
       }
       h1 {
         font-size: 20px;
         margin: 0 0 4px;
       }
+      h2 {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        margin: 26px 0 0;
+      }
       .lead {
         color: var(--muted);
-        margin: 0 0 22px;
+        margin: 0 0 6px;
       }
       label {
         display: block;
         font-weight: 600;
-        margin: 18px 0 6px;
+        margin: 14px 0 6px;
       }
       .hint {
         color: var(--muted);
         font-size: 12.5px;
         margin: 6px 0 0;
       }
-      input[type="password"] {
+      input[type="password"],
+      input[type="text"] {
         box-sizing: border-box;
         width: 100%;
-        padding: 9px 10px;
+        padding: 8px 10px;
         border-radius: 6px;
         border: 1px solid var(--border);
         background: var(--field);
@@ -74,14 +84,41 @@
         gap: 8px;
         align-items: center;
         font-weight: 400;
+        margin: 10px 0 0;
+      }
+      details {
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      code {
+        display: block;
+        background: var(--panel);
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin: 4px 0;
+        font-size: 12px;
+        user-select: all;
+        word-break: break-all;
       }
       a {
         color: inherit;
       }
+      .saved {
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 12px;
+      }
       .actions {
-        margin-top: 26px;
+        margin-top: 22px;
         display: flex;
-        justify-content: flex-end;
+        align-items: center;
+        justify-content: space-between;
         gap: 10px;
       }
       button {
@@ -100,13 +137,11 @@
       }
       .error {
         color: var(--danger);
-        min-height: 20px;
-        margin-top: 12px;
       }
       .data {
         color: var(--muted);
         font-size: 12px;
-        margin-top: 18px;
+        margin-top: 16px;
         word-break: break-all;
       }
     </style>
@@ -118,7 +153,10 @@
     </p>
 
     <form id="form">
-      <label for="dataforseo">DataForSEO API key (Base64)</label>
+      <label for="dataforseo"
+        >DataForSEO API key (Base64)
+        <span class="saved" id="saved-dataforseo"></span
+      ></label>
       <input
         id="dataforseo"
         type="password"
@@ -130,33 +168,96 @@
         <a href="https://app.dataforseo.com/api-access" target="_blank"
           >DataForSEO API Access</a
         >, click “Send by email” and paste the Base64 credentials.
-        <span id="dfs-saved"></span>
       </p>
 
-      <label for="openrouter">OpenRouter API key (optional)</label>
+      <h2>Optional features</h2>
+
+      <label for="OPENROUTER_API_KEY"
+        >OpenRouter API key
+        <span class="saved" data-saved="OPENROUTER_API_KEY"></span
+      ></label>
       <input
-        id="openrouter"
+        id="OPENROUTER_API_KEY"
         type="password"
         autocomplete="off"
         spellcheck="false"
       />
       <p class="hint">
-        Turns on SAM, the in-app SEO agent. <span id="or-saved"></span>
+        Turns on SAM, the in-app SEO agent, and AI prompt suggestions.
       </p>
 
+      <label for="CONTEXT_API_KEY"
+        >Context.dev API key
+        <span class="saved" data-saved="CONTEXT_API_KEY"></span
+      ></label>
+      <input
+        id="CONTEXT_API_KEY"
+        type="password"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <p class="hint">
+        Turns on “Render JavaScript” in site audits, for sites built with React,
+        Vue and similar.
+      </p>
+
+      <details id="google">
+        <summary>Google Search Console and Analytics</summary>
+        <p class="hint">
+          Create a Google OAuth client (type “Web application”) as described in
+          the
+          <a
+            href="https://github.com/ConrayGambit/open-seo/blob/main/docs/WINDOWS_DESKTOP.md#google-search-console-and-analytics"
+            target="_blank"
+            >setup guide</a
+          >, and add both of these as authorized redirect URIs:
+        </p>
+        <code id="redirect-gsc"></code>
+        <code id="redirect-ga4"></code>
+        <label for="GOOGLE_CLIENT_ID"
+          >Client ID <span class="saved" data-saved="GOOGLE_CLIENT_ID"></span
+        ></label>
+        <input
+          id="GOOGLE_CLIENT_ID"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <label for="GOOGLE_CLIENT_SECRET"
+          >Client secret
+          <span class="saved" data-saved="GOOGLE_CLIENT_SECRET"></span
+        ></label>
+        <input
+          id="GOOGLE_CLIENT_SECRET"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </details>
+
+      <h2>App</h2>
       <label class="check"
-        ><input id="telemetry" type="checkbox" /> Turn off the anonymous usage
-        heartbeat</label
+        ><input id="keepRunningInTray" type="checkbox" /> Keep running in the
+        system tray when the window is closed, so scheduled tracking
+        continues</label
+      >
+      <label class="check"
+        ><input id="openAtLogin" type="checkbox" /> Start OpenSEO in the tray
+        when I sign in to Windows</label
+      >
+      <label class="check"
+        ><input id="telemetryDisabled" type="checkbox" /> Turn off the anonymous
+        usage heartbeat</label
       >
 
-      <div class="error" id="error"></div>
       <div class="actions">
+        <span class="error" id="error"></span>
         <button id="save" type="submit">Save and start</button>
       </div>
     </form>
     <p class="data">
-      Keys are encrypted with your Windows account. Data folder:
-      <span id="data-dir"></span>
+      Keys are encrypted with your Windows account. Leave a field blank to keep
+      its saved value. Data folder: <span id="data-dir"></span>
     </p>
 
     <script src="setup.js"></script>

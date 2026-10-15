@@ -26,7 +26,7 @@ Upstream OpenSEO runs as a hosted service, on Cloudflare, or in Docker. This for
 | Install                  | Setup wizard                | Docker Desktop + terminal   | Cloudflare account + CLI |
 | Runs on                  | Your PC                     | Your PC or server           | Cloudflare's network     |
 | Login                    | None (single user)          | None (single user)          | Cloudflare Access        |
-| Background rank tracking | While the app is open       | Always                      | Always                   |
+| Background rank tracking | While running (tray)        | Always                      | Always                   |
 | Best for                 | One person, one PC          | Trying it out, home servers | Teams, multiple devices  |
 
 ## Features
@@ -47,6 +47,8 @@ The Windows edition adds:
 - A first-run setup screen for your API keys, so there are no `.env` files to edit.
 - Keys encrypted with your Windows account.
 - All data kept locally in `%APPDATA%\OpenSEO`, kept through updates and uninstall.
+- A system tray icon, so scheduled tracking keeps running with the window closed, and optional start at Windows sign-in.
+- Settings for every optional integration: OpenRouter (SAM), Context.dev (JavaScript rendering), and Google Search Console and Analytics.
 
 ## Download
 
@@ -82,8 +84,8 @@ Full details: [`docs/WINDOWS_DESKTOP.md`](./docs/WINDOWS_DESKTOP.md).
 
 ### Current limitations
 
-- Scheduled work (rank tracking, AI visibility checks) only runs while the app is open.
-- Google Search Console, Google Analytics and JavaScript rendering in site audits need extra keys the setup screen does not ask for yet. Use [Docker](./docs/SELF_HOSTING_DOCKER.md) or [Cloudflare](./docs/SELF_HOSTING_CLOUDFLARE.md) self-hosting if you need them.
+- Scheduled work (rank tracking, AI visibility checks) runs only while OpenSEO is running. It keeps running in the system tray when you close the window, and can start when you sign in to Windows.
+- No automatic updates yet; install a newer build over the old one. Your data is kept.
 - 64-bit Windows only. macOS and Linux users can use the upstream Docker setup.
 
 ## How it works
@@ -98,7 +100,7 @@ OpenSEO.exe (Electron)
          └─ D1 / KV / R2 / Durable Objects, stored in %APPDATA%\OpenSEO\state
 ```
 
-On launch, the shell applies database migrations, starts the server on `127.0.0.1` only, waits for `/api/health`, loads the dashboard, and triggers scheduled jobs every five minutes. Closing the window stops the server.
+On launch, the shell applies database migrations, starts the server on `127.0.0.1` only, waits for `/api/health`, loads the dashboard, and triggers scheduled jobs every five minutes. Closing the window hides OpenSEO to the tray; quitting stops the server.
 
 ## Build from source
 

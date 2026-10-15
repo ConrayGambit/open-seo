@@ -8,6 +8,8 @@ const {
   app,
   BrowserWindow,
   Menu,
+  Notification,
+  Tray,
   dialog,
   ipcMain,
   safeStorage,
@@ -31,16 +33,35 @@ const logDir = path.join(userData, "logs");
 
 let mainWindow = null;
 let setupWindow = null;
+let tray = null;
 let server = null; // { child, port, origin, stopScheduler }
 let quitting = false;
+// Server processes we stopped on purpose (restart), so their exit is not an error.
+const stoppedChildren = new WeakSet();
+// Started at Windows sign-in: stay in the tray instead of opening a window.
+const startHidden = process.argv.includes("--hidden");
 
 // ---------- settings ----------
 
+// Every value here reaches the Workers as an env var of the same name.
 const SECRET_KEYS = [
   "DATAFORSEO_API_KEY",
   "OPENROUTER_API_KEY",
+  // Google Search Console + GA4 (docs/SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md)
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  // Context.dev: the site-audit "Render JavaScript" renderer outside Cloudflare
+  "CONTEXT_API_KEY",
   "BETTER_AUTH_SECRET",
   "CRAWLER_ACCESS_SECRET",
+];
+
+// Optional keys the settings window edits; a blank field keeps the saved value.
+const OPTIONAL_KEYS = [
+  "OPENROUTER_API_KEY",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "CONTEXT_API_KEY",
 ];
 
 function encrypt(value) {
@@ -67,6 +88,9 @@ function loadSettings() {
   const settings = {
     port: raw.port ?? PREFERRED_PORT,
     telemetryDisabled: raw.telemetryDisabled ?? false,
+    keepRunningInTray: raw.keepRunningInTray ?? true,
+    openAtLogin: raw.openAtLogin ?? false,
+    trayHintShown: raw.trayHintShown ?? false,
   };
   for (const key of SECRET_KEYS) settings[key] = decrypt(raw.secrets?.[key]);
   return settings;
@@ -82,6 +106,9 @@ function saveSettings(settings) {
       {
         port: settings.port,
         telemetryDisabled: settings.telemetryDisabled,
+        keepRunningInTray: settings.keepRunningInTray,
+        openAtLogin: settings.openAtLogin,
+        trayHintShown: settings.trayHintShown,
         secrets,
       },
       null,
@@ -253,6 +280,10 @@ async function startServer(settings) {
   );
 
   const port = await pickPort(settings.port);
+  if (port !== settings.port)
+    log.write(
+      `Port ${settings.port} is in use; using ${port}. Google sign-in needs the saved port.\n`,
+    );
   const child = spawn(
     process.execPath,
     wranglerArgs([
@@ -281,7 +312,7 @@ async function startServer(settings) {
 
   child.once("exit", (code) => {
     if (server?.child === child) server = null;
-    if (!quitting) {
+    if (!quitting && !stoppedChildren.has(child)) {
       dialog.showErrorBox(
         "OpenSEO stopped",
         `The OpenSEO server exited (code ${code}). Details are in ${path.join(logDir, "server.log")}.`,
@@ -316,6 +347,7 @@ function stopServer() {
   server = null;
   stopScheduler();
   if (child.exitCode !== null) return;
+  stoppedChildren.add(child);
   // wrangler runs workerd as a grandchild; kill the whole tree on Windows.
   if (process.platform === "win32")
     spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
@@ -329,6 +361,61 @@ function stopServer() {
 const iconPath = () =>
   path.join(bundleSource(), "client", "android-chrome-512x512.png");
 
+function showMainWindow() {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+// Closing the window keeps OpenSEO in the tray so scheduled rank tracking and
+// AI visibility checks keep running; Quit from the tray or File menu stops it.
+function createTray() {
+  if (tray) return;
+  const icon =
+    process.platform === "win32"
+      ? path.join(bundleSource(), "client", "favicon.ico")
+      : path.join(bundleSource(), "client", "favicon-32x32.png");
+  tray = new Tray(icon);
+  tray.setToolTip("OpenSEO");
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { label: "Open OpenSEO", click: showMainWindow },
+      {
+        label: "Open in Browser",
+        click: () => server && shell.openExternal(server.origin),
+      },
+      {
+        label: "Settings…",
+        click: () => openSetupWindow({ firstRun: false }),
+      },
+      { type: "separator" },
+      { label: "Quit OpenSEO", click: () => app.quit() },
+    ]),
+  );
+  tray.on("click", showMainWindow);
+}
+
+function hideToTray() {
+  mainWindow.hide();
+  const settings = loadSettings();
+  if (settings.trayHintShown || !Notification.isSupported()) return;
+  new Notification({
+    title: "OpenSEO is still running",
+    body: "Scheduled tracking keeps running in the background. Right-click the tray icon to quit.",
+  }).show();
+  settings.trayHintShown = true;
+  saveSettings(settings);
+}
+
+function applyLoginItem(settings) {
+  if (process.platform !== "win32" && process.platform !== "darwin") return;
+  app.setLoginItemSettings({
+    openAtLogin: settings.openAtLogin,
+    args: ["--hidden"],
+  });
+}
+
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -341,7 +428,14 @@ function createMainWindow() {
     webPreferences: { contextIsolation: true, sandbox: true },
   });
   mainWindow.loadFile(path.join(__dirname, "loading.html"));
-  mainWindow.once("ready-to-show", () => mainWindow.show());
+  mainWindow.once("ready-to-show", () => {
+    if (!startHidden) mainWindow.show();
+  });
+  mainWindow.on("close", (event) => {
+    if (quitting || !loadSettings().keepRunningInTray) return;
+    event.preventDefault();
+    hideToTray();
+  });
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
@@ -359,16 +453,20 @@ function createMainWindow() {
   });
 }
 
+function parentForSettings(firstRun) {
+  return !firstRun && mainWindow?.isVisible() ? mainWindow : undefined;
+}
+
 function openSetupWindow({ firstRun }) {
   if (setupWindow) return setupWindow.focus();
   setupWindow = new BrowserWindow({
-    width: 560,
-    height: 540,
+    width: 600,
+    height: 800,
     resizable: false,
     title: "OpenSEO Settings",
     icon: iconPath(),
-    parent: firstRun ? undefined : (mainWindow ?? undefined),
-    modal: !firstRun && Boolean(mainWindow),
+    parent: parentForSettings(firstRun),
+    modal: Boolean(parentForSettings(firstRun)),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
@@ -394,7 +492,13 @@ async function launch() {
   const settings = loadSettings();
   if (!settings.DATAFORSEO_API_KEY) return openSetupWindow({ firstRun: true });
   ensureGeneratedSecrets(settings);
+  applyLoginItem(settings);
   if (!mainWindow) createMainWindow();
+  if (settings.keepRunningInTray) createTray();
+  else if (tray) {
+    tray.destroy();
+    tray = null;
+  }
   try {
     const origin = await startServer(settings);
     mainWindow?.loadURL(origin);
@@ -430,8 +534,16 @@ function buildMenu() {
         { label: "Open Logs Folder", click: () => shell.openPath(logDir) },
         { type: "separator" },
         { label: "Restart Server", click: () => restart() },
+        {
+          label: "Open in Browser",
+          click: () => server && shell.openExternal(server.origin),
+        },
         { type: "separator" },
-        { role: "quit" },
+        {
+          label: "Quit OpenSEO",
+          accelerator: "CmdOrCtrl+Q",
+          click: () => app.quit(),
+        },
       ],
     },
     { role: "editMenu" },
@@ -461,6 +573,13 @@ function buildMenu() {
           click: () =>
             shell.openExternal("https://app.dataforseo.com/api-access"),
         },
+        {
+          label: "Connect Google Search Console",
+          click: () =>
+            shell.openExternal(
+              "https://github.com/ConrayGambit/open-seo/blob/main/docs/WINDOWS_DESKTOP.md#google-search-console-and-analytics",
+            ),
+        },
       ],
     },
   ];
@@ -471,10 +590,17 @@ function buildMenu() {
 
 ipcMain.handle("settings:get", () => {
   const settings = loadSettings();
+  const saved = {};
+  for (const key of OPTIONAL_KEYS) saved[key] = Boolean(settings[key]);
   return {
     hasDataforseoKey: Boolean(settings.DATAFORSEO_API_KEY),
-    hasOpenrouterKey: Boolean(settings.OPENROUTER_API_KEY),
+    saved,
+    // Not secret, and shown so the user can check what they pasted.
+    googleClientId: settings.GOOGLE_CLIENT_ID,
     telemetryDisabled: settings.telemetryDisabled,
+    keepRunningInTray: settings.keepRunningInTray,
+    openAtLogin: settings.openAtLogin,
+    origin: `http://127.0.0.1:${settings.port}`,
     dataDir: userData,
   };
 });
@@ -482,10 +608,14 @@ ipcMain.handle("settings:get", () => {
 ipcMain.handle("settings:save", async (_event, input) => {
   const settings = loadSettings();
   const dataforseo = String(input?.dataforseoKey ?? "").trim();
-  const openrouter = String(input?.openrouterKey ?? "").trim();
   if (dataforseo) settings.DATAFORSEO_API_KEY = dataforseo;
-  if (openrouter) settings.OPENROUTER_API_KEY = openrouter;
+  for (const key of OPTIONAL_KEYS) {
+    const value = String(input?.keys?.[key] ?? "").trim();
+    if (value) settings[key] = value;
+  }
   settings.telemetryDisabled = Boolean(input?.telemetryDisabled);
+  settings.keepRunningInTray = Boolean(input?.keepRunningInTray);
+  settings.openAtLogin = Boolean(input?.openAtLogin);
   if (!settings.DATAFORSEO_API_KEY)
     return { ok: false, error: "A DataForSEO API key is required." };
   saveSettings(settings);
@@ -504,13 +634,14 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.on("second-instance", () => {
-    const win = mainWindow ?? setupWindow;
-    if (!win) return;
-    if (win.isMinimized()) win.restore();
-    win.focus();
+    if (mainWindow) return showMainWindow();
+    setupWindow?.focus();
   });
 
   app.whenReady().then(() => {
+    // Windows ties notifications and taskbar grouping to this id.
+    if (process.platform === "win32")
+      app.setAppUserModelId("so.openseo.desktop");
     buildMenu();
     launch();
   });
@@ -520,5 +651,7 @@ if (!app.requestSingleInstanceLock()) {
     stopServer();
   });
 
+  // With the tray on, a hidden main window is not "closed"; this only fires
+  // when the tray is off or before the main window exists (first-run setup).
   app.on("window-all-closed", () => app.quit());
 }

@@ -1,14 +1,28 @@
 const $ = (id) => document.getElementById(id);
 const firstRun = new URLSearchParams(location.search).get("firstRun") === "1";
+const OPTIONAL_KEYS = [
+  "OPENROUTER_API_KEY",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "CONTEXT_API_KEY",
+];
+const SAVED = "Saved. Leave blank to keep it.";
 
 window.openseoDesktop.getSettings().then((settings) => {
   $("data-dir").textContent = settings.dataDir;
-  $("telemetry").checked = settings.telemetryDisabled;
-  if (settings.hasDataforseoKey) {
-    $("dfs-saved").textContent = "A key is saved; leave blank to keep it.";
+  $("redirect-gsc").textContent = `${settings.origin}/api/gsc/oauth/callback`;
+  $("redirect-ga4").textContent = `${settings.origin}/api/ga4/oauth/callback`;
+  for (const id of ["telemetryDisabled", "keepRunningInTray", "openAtLogin"]) {
+    $(id).checked = settings[id];
   }
-  if (settings.hasOpenrouterKey) {
-    $("or-saved").textContent = "A key is saved; leave blank to keep it.";
+  if (settings.hasDataforseoKey) $("saved-dataforseo").textContent = SAVED;
+  for (const key of OPTIONAL_KEYS) {
+    if (settings.saved[key])
+      document.querySelector(`[data-saved="${key}"]`).textContent = SAVED;
+  }
+  if (settings.googleClientId) {
+    $("GOOGLE_CLIENT_ID").placeholder = settings.googleClientId;
+    $("google").open = true;
   }
   if (!firstRun) {
     $("title").textContent = "Settings";
@@ -21,10 +35,14 @@ $("form").addEventListener("submit", async (event) => {
   event.preventDefault();
   $("error").textContent = "";
   $("save").disabled = true;
+  const keys = {};
+  for (const key of OPTIONAL_KEYS) keys[key] = $(key).value;
   const result = await window.openseoDesktop.saveSettings({
     dataforseoKey: $("dataforseo").value,
-    openrouterKey: $("openrouter").value,
-    telemetryDisabled: $("telemetry").checked,
+    keys,
+    telemetryDisabled: $("telemetryDisabled").checked,
+    keepRunningInTray: $("keepRunningInTray").checked,
+    openAtLogin: $("openAtLogin").checked,
   });
   if (!result.ok) {
     $("error").textContent = result.error;

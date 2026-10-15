@@ -8,8 +8,17 @@ module.exports = {
   executableName: "OpenSEO",
   // The desktop app versions with the OpenSEO app it bundles.
   extraMetadata: { version },
+  // No auto-update feed yet; installers are published by the GitHub workflow.
+  publish: null,
   directories: { output: "release", buildResources: "build-resources" },
-  files: ["src/**/*", "package.json"],
+  files: [
+    "src/**/*",
+    "package.json",
+    // Native binaries for other platforms, present when building off Windows.
+    "!node_modules/@cloudflare/workerd-{linux,darwin}-*/**",
+    "!node_modules/@esbuild/{linux,darwin}-*/**",
+    "!node_modules/@img/*-{linux,linuxmusl,darwin}-*/**",
+  ],
   // wrangler spawns the workerd and esbuild binaries from node_modules, and
   // Windows cannot execute files packed inside an asar archive.
   asar: false,
@@ -17,10 +26,6 @@ module.exports = {
   win: {
     target: [{ target: "nsis", arch: ["x64"] }],
     icon: "build/openseo/client/android-chrome-512x512.png",
-    // Stamping the exe's icon and version needs Windows (or Wine). Builds
-    // from Linux/macOS still produce a working installer, with Electron's
-    // default exe icon.
-    signAndEditExecutable: process.platform === "win32",
   },
   nsis: {
     oneClick: false,
