@@ -73,9 +73,14 @@ function encrypt(value) {
 
 function decrypt(stored) {
   if (!stored) return "";
-  if (stored.enc)
+  if (!stored.enc) return stored.plain ?? "";
+  try {
     return safeStorage.decryptString(Buffer.from(stored.enc, "base64"));
-  return stored.plain ?? "";
+  } catch {
+    // Encrypted under another Windows profile (reset, or a copied
+    // settings.json): treat it as unset so the settings window asks again.
+    return "";
+  }
 }
 
 function loadSettings() {
@@ -361,6 +366,28 @@ function stopServer() {
 const iconPath = () =>
   path.join(bundleSource(), "client", "android-chrome-512x512.png");
 
+function originOf(url) {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
+// Only web links leave the app. Other schemes (file:, search-ms:, ms-msdt:,
+// ...) reach Windows protocol handlers, and links can come from crawled pages
+// shown in audits and SERP tables.
+function openInBrowser(url) {
+  let protocol;
+  try {
+    protocol = new URL(url).protocol;
+  } catch {
+    return;
+  }
+  if (["https:", "http:", "mailto:"].includes(protocol))
+    shell.openExternal(url);
+}
+
 function showMainWindow() {
   if (!mainWindow) return;
   if (mainWindow.isMinimized()) mainWindow.restore();
@@ -429,7 +456,8 @@ function createMainWindow() {
   });
   mainWindow.loadFile(path.join(__dirname, "loading.html"));
   mainWindow.once("ready-to-show", () => {
-    if (!startHidden) mainWindow.show();
+    // A sign-in start stays hidden only when the tray icon is there to reopen it.
+    if (!startHidden || !loadSettings().keepRunningInTray) mainWindow.show();
   });
   mainWindow.on("close", (event) => {
     if (quitting || !loadSettings().keepRunningInTray) return;
@@ -440,16 +468,17 @@ function createMainWindow() {
     mainWindow = null;
   });
 
-  // Keep OpenSEO in the window; send everything else to the default browser.
+  // Keep OpenSEO in the window. New-window links (including same-origin ones
+  // such as report share links) and navigations away from the app open in the
+  // default browser.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (!server || !url.startsWith(server.origin)) shell.openExternal(url);
+    openInBrowser(url);
     return { action: "deny" };
   });
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    if (server && !url.startsWith(server.origin) && !url.startsWith("file:")) {
-      event.preventDefault();
-      shell.openExternal(url);
-    }
+    if (server && originOf(url) === server.origin) return;
+    event.preventDefault();
+    openInBrowser(url);
   });
 }
 
@@ -493,11 +522,14 @@ async function launch() {
   if (!settings.DATAFORSEO_API_KEY) return openSetupWindow({ firstRun: true });
   ensureGeneratedSecrets(settings);
   applyLoginItem(settings);
-  if (!mainWindow) createMainWindow();
+  const isNewWindow = !mainWindow;
+  if (isNewWindow) createMainWindow();
   if (settings.keepRunningInTray) createTray();
-  else if (tray) {
-    tray.destroy();
+  else {
+    tray?.destroy();
     tray = null;
+    // Without a tray, a window hidden to the tray would have no way back.
+    if (!isNewWindow) showMainWindow();
   }
   try {
     const origin = await startServer(settings);
