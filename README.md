@@ -1,89 +1,161 @@
-# OpenSEO
+<div align="center">
 
-> Open source alternative to Semrush and Ahrefs
+<img src="src/public/android-chrome-192x192.png" width="96" alt="OpenSEO logo" />
 
-OpenSEO is an SEO tool for _the people_. If tools like Semrush or Ahrefs are too expensive or bloated, OpenSEO is a pay-as-you-go alternative that you actually control.
+# OpenSEO for Windows
 
-> All-in-one SEO tool for you and your AI agent.
+**The open-source SEO suite, packaged as a native Windows desktop app.**
 
-Connect with any agent like Claude Code, OpenClaw or Hermes. We have pre-built skills, but you can build your own to tailor OpenSEO to your needs.
+Keyword research, rank tracking, backlinks, site audits and AI visibility, running entirely on your PC.
 
-<img width="100%" alt="openseo-keyword-research" src="https://github.com/user-attachments/assets/8ebdc439-3e72-41ab-8bde-8cda771ef2e8" />
+[Download](#download) · [Features](#features) · [Getting started](#getting-started) · [Build from source](#build-from-source) · [Upstream project](https://github.com/every-app/open-seo)
 
-## Hosted Version
+</div>
 
-Try OpenSEO for free on our website. If you want to support the project, a hosted subscription is $10/month.
+---
 
-[openseo.so](https://openseo.so)
+> [!NOTE]
+> This is a community fork of [every-app/open-seo](https://github.com/every-app/open-seo). It adds a Windows desktop edition on top of the upstream app and tracks upstream for everything else. It is not affiliated with or supported by the OpenSEO maintainers; please report Windows app issues on this fork.
 
-## Why use OpenSEO?
+## Why this fork
 
-- Best in class MCP and AI Skills.
-- Modern, simple UI.
-  - Focused workflows instead of a bloated, complex SEO suite.
-- No subscriptions.
-  - Bring your own DataForSEO API key and pay only for what you use.
-- Fork and vibe code your own custom tool.
+Upstream OpenSEO runs as a hosted service, on Cloudflare, or in Docker. This fork adds a fourth option for people who just want a program they can install:
 
-## Main SEO Workflows
+|                          | Windows desktop (this fork) | Docker                      | Cloudflare               |
+| ------------------------ | --------------------------- | --------------------------- | ------------------------ |
+| Install                  | Setup wizard                | Docker Desktop + terminal   | Cloudflare account + CLI |
+| Runs on                  | Your PC                     | Your PC or server           | Cloudflare's network     |
+| Login                    | None (single user)          | None (single user)          | Cloudflare Access        |
+| Background rank tracking | While the app is open       | Always                      | Always                   |
+| Best for                 | One person, one PC          | Trying it out, home servers | Teams, multiple devices  |
 
-- Keyword research
-- Rank tracking
-- Competitor Insights
-- Backlinks
-- Site Audits
-- AI Visibility
+## Features
 
-## OpenSEO MCP & Agent Skills
+Everything in upstream OpenSEO, including:
 
-OpenSEO exposes an MCP server so AI agents like Claude Code, OpenClaw, and Hermes can use your SEO data directly. Agent Skills are reusable workflows that guide your agent through SEO tasks using the MCP.
+- **Keyword research:** volumes, difficulty, intent and related ideas.
+- **Rank tracking:** scheduled position checks for the keywords you care about.
+- **Competitor insights:** domain overviews, top pages and keyword gaps.
+- **Backlinks:** referring domains and link profiles.
+- **Site audits:** crawl for broken links, missing tags and indexability problems.
+- **AI visibility:** see how AI assistants answer the questions your customers ask.
+- **SAM, the in-app SEO agent:** optional, with an OpenRouter key.
 
-- [Set up ChatGPT web or desktop](https://openseo.so/docs/chatgpt) (works on Free and paid ChatGPT plans)
-- [Set up Codex](https://openseo.so/docs/codex-plugin)
-- [Set up OpenSEO MCP](https://openseo.so/docs/mcp)
-- [Set up OpenSEO Agent Skills](https://openseo.so/docs/skills/setup)
+The Windows edition adds:
 
-## Self-Hosting
+- A standard installer with Start menu and desktop shortcuts.
+- A first-run setup screen for your API keys, so there are no `.env` files to edit.
+- Keys encrypted with your Windows account.
+- All data kept locally in `%APPDATA%\OpenSEO`, kept through updates and uninstall.
 
-OpenSEO supports these self-hosting paths:
+## Download
 
-- **Simple: Docker (Best for testing it out)** - For personal use on your own machine. See [`docs/SELF_HOSTING_DOCKER.md`](./docs/SELF_HOSTING_DOCKER.md).
-  - Unless you already are self-hosting other apps and are confident doing so, we recommend self-hosting with Cloudflare as opposed to Railway, Coolify or Dokploy.
-  - We plan to make it simpler to host on those platforms in the next few months.
-- **Windows desktop app** - OpenSEO as a regular Windows program, no Docker needed. See [`docs/WINDOWS_DESKTOP.md`](./docs/WINDOWS_DESKTOP.md).
-- **Recommended: Cloudflare** - For internet-facing self-hosting across multiple devices or with your team (works on the free plan). See [`docs/SELF_HOSTING_CLOUDFLARE.md`](./docs/SELF_HOSTING_CLOUDFLARE.md).
+Installers are built by GitHub Actions on Windows:
 
-Either way, you need a DataForSEO API key to get SEO data. See [`docs/DATAFORSEO_API_KEY.md`](./docs/DATAFORSEO_API_KEY.md).
+- **Releases:** tagged builds (`desktop-v*`) attach `OpenSEO-Setup-<version>.exe` to the [Releases](../../releases) page.
+- **Latest build:** open the [Windows desktop app workflow](../../actions/workflows/desktop-windows.yml), pick the latest successful run and download the `OpenSEO-Windows` artifact.
 
-## Costs
+Requirements: Windows 10 or 11, 64-bit.
 
-OpenSEO needs a [DataForSEO](https://dataforseo.com/?aff=255379) API key so that you can get SEO data. You pay them directly when self hosting.
+> [!IMPORTANT]
+> The installer is not code-signed yet. Windows SmartScreen will show "Windows protected your PC" on first install. Choose **More info → Run anyway**.
 
-See [openseo.so/pricing](https://openseo.so/pricing)
+## Getting started
 
-When you self host, your costs will be slightly lower than the estimates on our website. The way the hosted service makes money is by charging 28% extra for every request we make to DataForSEO.
+1. **Get a DataForSEO key.** OpenSEO pulls SEO data from [DataForSEO](https://dataforseo.com/?aff=255379), a pay-as-you-go API. New accounts include $1 of free credit. Follow [`docs/DATAFORSEO_API_KEY.md`](./docs/DATAFORSEO_API_KEY.md) to copy your Base64 credentials.
+2. **Install and open OpenSEO.**
+3. **Paste your key** on the welcome screen. Add an [OpenRouter](https://openrouter.ai) key too if you want SAM, the in-app agent.
+4. Click **Save and start**. Your dashboard opens a few seconds later.
 
-## Local Development
+You pay DataForSEO directly for the data you use; there is no OpenSEO subscription. See [openseo.so/pricing](https://openseo.so/pricing) for typical costs.
 
-See [`docs/LOCAL_DEVELOPMENT.md`](./docs/LOCAL_DEVELOPMENT.md).
+### Using the app
 
-## Contributing
+| Menu                        | What it does                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| **File → Settings…**        | Change API keys or turn off the anonymous usage heartbeat. Restarts the local server. |
+| **File → Open Data Folder** | Your database, settings and logs. Back this folder up to keep your data.              |
+| **File → Open Logs Folder** | Server logs, useful when reporting a problem.                                         |
+| **File → Restart Server**   | Restarts OpenSEO's local server without closing the window.                           |
 
-Creating clear issues is the best way to contribute.
+Full details: [`docs/WINDOWS_DESKTOP.md`](./docs/WINDOWS_DESKTOP.md).
 
-Read more here: [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md)
+### Current limitations
 
-We have this skill: `/simple-issue-description` which helps.
+- Scheduled work (rank tracking, AI visibility checks) only runs while the app is open.
+- Google Search Console, Google Analytics and JavaScript rendering in site audits need extra keys the setup screen does not ask for yet. Use [Docker](./docs/SELF_HOSTING_DOCKER.md) or [Cloudflare](./docs/SELF_HOSTING_CLOUDFLARE.md) self-hosting if you need them.
+- 64-bit Windows only. macOS and Linux users can use the upstream Docker setup.
 
-```sh
-npx skills add every-app/open-seo --skill simple-issue-description
+## How it works
+
+OpenSEO is a [TanStack Start](https://tanstack.com/start) app built for Cloudflare Workers, using D1, KV, R2, Durable Objects and Workflows. The desktop edition does not change the app. It wraps the same build the Docker image serves:
+
+```
+OpenSEO.exe (Electron)
+ ├─ native window ──────────────► http://127.0.0.1:<port>
+ └─ local server (wrangler dev, Electron's Node)
+     └─ workerd: app worker + site-audit worker
+         └─ D1 / KV / R2 / Durable Objects, stored in %APPDATA%\OpenSEO\state
 ```
 
-## Community
+On launch, the shell applies database migrations, starts the server on `127.0.0.1` only, waits for `/api/health`, loads the dashboard, and triggers scheduled jobs every five minutes. Closing the window stops the server.
 
-Join Discord to chat: [Discord](https://discord.gg/c9uGs3cFXr)
+## Build from source
 
-Follow along for updates:
+Prerequisites: Windows, [Node.js 22](https://nodejs.org) and [pnpm](https://pnpm.io) (`corepack enable`).
 
-- Follow on X: https://x.com/bensenescu
-- Sign up for the mailing list on our website: [openseo.so](https://openseo.so)
+```bash
+git clone https://github.com/ConrayGambit/open-seo.git
+cd open-seo
+pnpm install
+pnpm --dir desktop install
+
+# Run without packaging
+pnpm --dir desktop start
+
+# Build the installer → desktop/release/OpenSEO-Setup-<version>.exe
+pnpm --dir desktop run dist:win
+```
+
+Layout of the Windows additions:
+
+| Path                                    | Purpose                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| `desktop/src/`                          | Electron main process, setup screen and loading screen                      |
+| `desktop/scripts/prepare-app.mjs`       | Builds OpenSEO in single-user mode and stages it for packaging              |
+| `desktop/scripts/smoke-test.mjs`        | Starts the packaged server and checks health and the scheduler (used in CI) |
+| `desktop/electron-builder.config.cjs`   | Installer configuration (NSIS, x64)                                         |
+| `.github/workflows/desktop-windows.yml` | Builds, smoke-tests and publishes the installer                             |
+
+For working on the web app itself, see [`docs/LOCAL_DEVELOPMENT.md`](./docs/LOCAL_DEVELOPMENT.md).
+
+### Releasing
+
+Push a tag starting with `desktop-v` (for example `desktop-v0.1.13`). The workflow builds the installer and attaches it to a draft GitHub release for you to review and publish. The app version follows the upstream `package.json` version.
+
+### Staying up to date with upstream
+
+```bash
+git remote add upstream https://github.com/every-app/open-seo.git
+git fetch upstream
+git merge upstream/main
+```
+
+The Windows additions live in their own folder and touch only a few upstream files, so merges are usually clean.
+
+## Other ways to run OpenSEO
+
+- **Hosted:** [openseo.so](https://openseo.so), run by the upstream maintainers.
+- **Docker:** [`docs/SELF_HOSTING_DOCKER.md`](./docs/SELF_HOSTING_DOCKER.md).
+- **Cloudflare:** [`docs/SELF_HOSTING_CLOUDFLARE.md`](./docs/SELF_HOSTING_CLOUDFLARE.md).
+- **MCP and agent skills:** connect Claude Code, ChatGPT, Codex and others; see [openseo.so/docs/mcp](https://openseo.so/docs/mcp).
+
+## Privacy
+
+Your projects, keywords and audit results never leave your PC except as requests to the APIs you configure (DataForSEO, and OpenRouter if enabled). The app sends the upstream project's anonymous usage heartbeat (counts only, no URLs, keywords or prompts), which you can turn off in **File → Settings…**. Details: [`docs/SELF_HOSTING_DOCKER.md#telemetry`](./docs/SELF_HOSTING_DOCKER.md#telemetry).
+
+## Credits and license
+
+OpenSEO is created by [Ben Senescu](https://x.com/bensenescu) and the [every-app/open-seo](https://github.com/every-app/open-seo) contributors. Join the upstream community on [Discord](https://discord.gg/c9uGs3cFXr).
+
+This fork is released under the same [MIT License](./LICENSE).
