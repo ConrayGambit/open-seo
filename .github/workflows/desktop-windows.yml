@@ -1,0 +1,75 @@
+name: Windows desktop app
+
+# Builds the OpenSEO Windows installer (desktop/). Run it by hand from the
+# Actions tab, or push a `desktop-v*` tag to attach the installer to a draft
+# GitHub release.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "desktop/**"
+      - ".github/workflows/desktop-windows.yml"
+  push:
+    tags:
+      - "desktop-v*"
+
+concurrency:
+  group: desktop-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            desktop/pnpm-lock.yaml
+
+      - name: Install app dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install desktop dependencies
+        run: pnpm --dir desktop install --frozen-lockfile
+
+      - name: Build installer
+        run: pnpm --dir desktop run dist:win
+        env:
+          # Optional built-in Google client for one-click Search Console and GA4.
+          OPENSEO_DESKTOP_GOOGLE_CLIENT_ID: ${{ secrets.OPENSEO_DESKTOP_GOOGLE_CLIENT_ID }}
+          OPENSEO_DESKTOP_GOOGLE_CLIENT_SECRET: ${{ secrets.OPENSEO_DESKTOP_GOOGLE_CLIENT_SECRET }}
+
+      - name: Smoke test the packaged server
+        working-directory: desktop/release/win-unpacked
+        run: node ../../scripts/smoke-test.mjs OpenSEO.exe resources/app resources/openseo
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenSEO-Windows
+          path: desktop/release/OpenSEO-Setup-*.exe
+          if-no-files-found: error
+
+      - name: Attach to draft release
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem desktop/release/OpenSEO-Setup-*.exe
+          gh release view $env:GITHUB_REF_NAME 2>$null
+          if ($LASTEXITCODE -ne 0) { gh release create $env:GITHUB_REF_NAME --draft --title "OpenSEO for Windows $env:GITHUB_REF_NAME" --notes "Windows installer for OpenSEO." }
+          gh release upload $env:GITHUB_REF_NAME $exe.FullName --clobber

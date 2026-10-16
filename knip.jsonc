@@ -30,6 +30,8 @@
     "**/*.{js,mjs,ts,tsx}",
     "!src/routeTree.gen.ts",
     "!web/**",
+    // Electron shell for the Windows app: its own workspace and dependencies
+    "!desktop/**",
     // Alchemy state/bundle artifacts (gitignored)
     "!.alchemy/**",
     "!tests/badseo/**",

@@ -1,9 +1,11 @@
+import { z } from "zod";
 import { AppError } from "@/server/lib/errors";
 import { getRequiredEnvValue } from "@/server/lib/runtime-env";
 import type { ErrorCode } from "@/shared/error-codes";
 // No runtime cycle: envelope.ts imports only the DataforseoErrorClassifier
 // type from here.
 import {
+  unverifiedAccountError,
   warnIfUpstreamResponseFailed,
   type DataforseoResponseLike,
   type DataforseoTaskLike,
@@ -45,6 +47,17 @@ function formatDataforseoErrorPayload(value: unknown): string {
   return text.length > MAX_DATAFORSEO_ERROR_PAYLOAD_LENGTH
     ? `${text.slice(0, MAX_DATAFORSEO_ERROR_PAYLOAD_LENGTH)}... [truncated]`
     : text;
+}
+
+function parseStatusCode(rawText: string): number | undefined {
+  try {
+    const parsed = z
+      .object({ status_code: z.number() })
+      .safeParse(JSON.parse(rawText));
+    return parsed.success ? parsed.data.status_code : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function formatDataforseoRequestPath(url: RequestInfo): string {
@@ -116,7 +129,9 @@ function createAuthenticatedFetch(
 
       const rawText = await response.text();
       const path = formatDataforseoRequestPath(url);
-      const classified = classify?.(response.status, rawText, path);
+      const classified =
+        unverifiedAccountError(parseStatusCode(rawText)) ??
+        classify?.(response.status, rawText, path);
       if (classified) throw classified;
 
       const code: ErrorCode =

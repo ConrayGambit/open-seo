@@ -1,0 +1,22 @@
+{
+  "name": "open-seo-desktop",
+  "private": true,
+  "productName": "OpenSEO",
+  "version": "0.1.14",
+  "description": "OpenSEO as a Windows desktop app",
+  "main": "src/main.cjs",
+  "packageManager": "pnpm@10.30.1",
+  "scripts": {
+    "prepare-app": "node scripts/prepare-app.mjs",
+    "start": "node scripts/prepare-app.mjs && electron .",
+    "start:skip-build": "electron .",
+    "dist:win": "node scripts/prepare-app.mjs && electron-builder --win --x64 --config electron-builder.config.cjs"
+  },
+  "dependencies": {
+    "wrangler": "4.105.0"
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.17.0"
+  }
+}

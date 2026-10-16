@@ -18,8 +18,9 @@ const STANDARD_MESSAGES: Record<ErrorCode, string> = {
     "An active hosted subscription is required before you can use OpenSEO.",
   INSUFFICIENT_CREDITS:
     "You don't have enough credits for this. Upgrade your plan or buy more credits to keep going.",
-  AUDIT_RENDERING_UNAVAILABLE:
-    "JavaScript rendering is not configured on this deployment. Ask your administrator to enable a renderer.",
+  AUDIT_RENDERING_UNAVAILABLE: isHostedClientAuthMode()
+    ? "JavaScript rendering is not configured on this deployment. Ask your administrator to enable a renderer."
+    : "JavaScript rendering is not set up. Add a Context.dev API key (CONTEXT_API_KEY) to turn it on, or scan without rendering.",
   FORBIDDEN: "You do not have access to this resource.",
   NOT_FOUND: "The requested resource was not found.",
   AUDIT_CAPACITY_REACHED:
@@ -39,6 +40,8 @@ const STANDARD_MESSAGES: Record<ErrorCode, string> = {
     "The AI visibility request could not be completed. Review the tracking settings and try again.",
   DATAFORSEO_AUTH_FAILED:
     "DataForSEO rejected the API key. Check that DATAFORSEO_API_KEY is the base64 of your DataForSEO login:password.",
+  DATAFORSEO_ACCOUNT_UNVERIFIED:
+    "Your DataForSEO account isn't verified yet. Finish verification in the DataForSEO dashboard, then try again.",
   RATE_LIMITED: "Too many requests. Please wait and try again.",
   UPSTREAM_UNAVAILABLE:
     "The data provider is temporarily unavailable. Please retry in a moment.",

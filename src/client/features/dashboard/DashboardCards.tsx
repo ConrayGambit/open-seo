@@ -9,7 +9,10 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { GoogleConnectionCard } from "@/client/features/integrations/GoogleConnectionCard";
-import { SeverityBadge } from "@/client/features/audit/shared";
+import {
+  SeverityBadge,
+  useAuditCapabilities,
+} from "@/client/features/audit/shared";
 import { AUDIT_ISSUE_TYPES } from "@/shared/audit-issues";
 
 import {
@@ -162,6 +165,8 @@ export function AuditHealthCard({
   domain: string | null;
 }) {
   const queryClient = useQueryClient();
+  const canRender =
+    useAuditCapabilities(projectId).data?.canRenderJavaScript === true;
   const scan = useMutation({
     mutationFn: () =>
       startAudit({
@@ -169,7 +174,7 @@ export function AuditHealthCard({
           projectId,
           startUrl: `https://${domain}`,
           maxPages: 50,
-          renderJavaScript: true,
+          renderJavaScript: canRender,
         },
       }),
     onSuccess: () =>

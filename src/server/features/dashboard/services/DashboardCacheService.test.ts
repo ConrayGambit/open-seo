@@ -32,6 +32,9 @@ vi.mock("@/server/features/audit/services/AuditService", () => ({
 vi.mock("@/server/features/audit/repositories/AuditRepository", () => ({
   AuditRepository: { getLatestAuditForProject: state.latestAudit },
 }));
+vi.mock("@/server/lib/audit/rendering-policy", () => ({
+  isAuditRenderingAllowed: async () => true,
+}));
 vi.mock("@/db", () => ({ db: state.db }));
 vi.mock("cloudflare:workers", () => ({ env: { DATABASE_PROVIDER: "d1" } }));
 vi.mock("@/server/lib/r2-cache", async (importOriginal) => ({
@@ -128,16 +131,14 @@ it("does not share cached provider data between organizations", async () => {
   expect(load).toHaveBeenCalledTimes(2);
 });
 
-it("backs off cold failures without another provider charge", async () => {
+it("backs off cold failures without another provider charge and keeps their cause", async () => {
   const load = vi.fn(async () => {
-    throw new Error("out of credits");
+    throw new AppError("BACKLINKS_BILLING_ISSUE");
   });
-  await expect(DashboardCacheService.readThrough(input(load))).rejects.toThrow(
-    "out of credits",
-  );
-  await expect(DashboardCacheService.readThrough(input(load))).rejects.toThrow(
-    "temporarily paused",
-  );
+  for (let attempt = 0; attempt < 2; attempt++)
+    await expect(
+      DashboardCacheService.readThrough(input(load)),
+    ).rejects.toMatchObject({ code: "BACKLINKS_BILLING_ISSUE" });
   expect(load).toHaveBeenCalledTimes(1);
 });
 

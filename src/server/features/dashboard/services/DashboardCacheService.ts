@@ -2,6 +2,7 @@ import { z } from "zod";
 import { buildCacheKey, getCached, setCached } from "@/server/lib/r2-cache";
 import { DataRefreshClaimRepository } from "@/server/features/dashboard/repositories/DataRefreshClaimRepository";
 import { AppError, asAppError } from "@/server/lib/errors";
+import { errorCodeSchema } from "@/shared/error-codes";
 
 // Cached provider responses are disposable; keep them longer than their refresh
 // cadence so credit/provider failures can display the last successful result.
@@ -27,6 +28,9 @@ async function readThrough<T>(input: {
     key,
     input.organizationId,
   );
+  // A failed cold load pauses retries; repeat its error meanwhile so the card
+  // keeps showing the real cause, not "too many requests".
+  const failureKey = `${key}:failure`;
   if (!token) {
     if (cached)
       return {
@@ -34,6 +38,10 @@ async function readThrough<T>(input: {
         stale: true,
         refreshError: "Update already running or temporarily paused.",
       };
+    const failure = z
+      .object({ code: errorCodeSchema })
+      .safeParse(await getCached(failureKey));
+    if (failure.success) throw new AppError(failure.data.code);
     throw new AppError(
       "RATE_LIMITED",
       "An update is already running or temporarily paused. Try again shortly.",
@@ -57,12 +65,12 @@ async function readThrough<T>(input: {
     return { ...result, stale: false, refreshError: null };
   } catch (error) {
     await DataRefreshClaimRepository.finish(key, token, 5 * 60_000);
-    if (!cached) throw error;
-    return {
-      ...cached,
-      stale: true,
-      refreshError: asAppError(error)?.code ?? "UPSTREAM_UNAVAILABLE",
-    };
+    const code = asAppError(error)?.code ?? "UPSTREAM_UNAVAILABLE";
+    if (!cached) {
+      await setCached(failureKey, { code }, 5 * 60);
+      throw error;
+    }
+    return { ...cached, stale: true, refreshError: code };
   }
 }
 

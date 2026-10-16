@@ -1,0 +1,14 @@
+# Separate workspace from the app at the repo root: the desktop shell has its
+# own small dependency tree (Electron + the wrangler runtime it ships).
+minimumReleaseAge: 11520
+
+# The installer bundles workerd's Windows binary, so install it even when the
+# build runs on Linux or macOS.
+supportedArchitectures:
+  os: [current, win32]
+  cpu: [current, x64]
+
+onlyBuiltDependencies:
+  - electron
+  - esbuild
+  - workerd
