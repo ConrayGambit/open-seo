@@ -404,6 +404,18 @@ function originOf(url) {
   }
 }
 
+const GOOGLE_SETUP_GUIDE =
+  "https://github.com/ConrayGambit/open-seo/blob/main/docs/WINDOWS_DESKTOP.md#google-search-console-and-analytics";
+
+// The in-app "Open setup guide" links describe server env vars; the desktop
+// app takes the Google client in Settings instead.
+const DESKTOP_GUIDES = {
+  "https://github.com/every-app/open-seo/blob/main/docs/SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md":
+    GOOGLE_SETUP_GUIDE,
+  "https://github.com/every-app/open-seo/blob/main/docs/SELF_HOSTING_GOOGLE_ANALYTICS.md":
+    GOOGLE_SETUP_GUIDE,
+};
+
 // Only web links leave the app. Other schemes (file:, search-ms:, ms-msdt:,
 // ...) reach Windows protocol handlers, and links can come from crawled pages
 // shown in audits and SERP tables.
@@ -415,7 +427,7 @@ function openInBrowser(url) {
     return;
   }
   if (["https:", "http:", "mailto:"].includes(protocol))
-    shell.openExternal(url);
+    shell.openExternal(DESKTOP_GUIDES[url] ?? url);
 }
 
 function showMainWindow() {
@@ -645,10 +657,7 @@ function buildMenu() {
         },
         {
           label: "Connect Google Search Console",
-          click: () =>
-            shell.openExternal(
-              "https://github.com/ConrayGambit/open-seo/blob/main/docs/WINDOWS_DESKTOP.md#google-search-console-and-analytics",
-            ),
+          click: () => shell.openExternal(GOOGLE_SETUP_GUIDE),
         },
       ],
     },

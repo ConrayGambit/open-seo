@@ -53,12 +53,17 @@ Rank tracking, AI visibility schedules and audit cleanup run every five minutes,
 
 ## Google Search Console and Analytics
 
-1. Follow steps 1–3 of [`SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md`](./SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md) (and enable the APIs in [`SELF_HOSTING_GOOGLE_ANALYTICS.md`](./SELF_HOSTING_GOOGLE_ANALYTICS.md) for GA4) to create a "Web application" OAuth client.
-2. Add both redirect URIs shown in **Settings → Google Search Console and Analytics**. With the default port they are:
+Search Console and Google Analytics 4 use your own Google OAuth client. One client covers both. It takes about ten minutes in the [Google Cloud Console](https://console.cloud.google.com/):
+
+1. Create a project (or pick one) and enable the APIs you want:
+   - Search Console: [Google Search Console API](https://console.cloud.google.com/apis/library/searchconsole.googleapis.com)
+   - GA4: [Google Analytics Admin API](https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com) and [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com)
+2. Under **APIs & Services → OAuth consent screen**, choose **External**, fill in the app name and your email, and add the Google account you will connect as a **test user**. Testing mode is enough for personal use; without the test user Google blocks sign-in with `access_denied`.
+3. Under **APIs & Services → Credentials → Create credentials → OAuth client ID**, choose **Web application** and add both redirect URIs shown in OpenSEO's **Settings → Google Search Console and Analytics**. With the default port they are:
    - `http://127.0.0.1:47321/api/gsc/oauth/callback`
    - `http://127.0.0.1:47321/api/ga4/oauth/callback`
-3. Paste the client ID and secret into Settings and save.
-4. Click **Connect** in OpenSEO. Google's consent page opens in your default browser; after you approve, return to the OpenSEO window and refresh (**View → Reload**).
+4. Copy the client ID and client secret into that Settings section and click **Save and restart**.
+5. Click **Connect** on the Search Console or GA4 card. Google's consent page opens in your default browser; after you approve, return to the OpenSEO window and refresh (**View → Reload**), then pick your property.
 
 If you change the [local port](#local-port-and-ai-agents), add the new redirect URIs to your Google OAuth client too.
 
