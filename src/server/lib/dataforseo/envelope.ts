@@ -245,6 +245,21 @@ type AssertOkOptions = {
 };
 
 /**
+ * DataForSEO answers 40104 until a new account finishes verification. Every
+ * endpoint fails the same way, so name the fix instead of an internal error.
+ */
+export function unverifiedAccountError(
+  status: number | undefined,
+): AppError | null {
+  return status === 40104
+    ? new AppError(
+        "DATAFORSEO_ACCOUNT_UNVERIFIED",
+        "DataForSEO account is not verified (40104)",
+      )
+    : null;
+}
+
+/**
  * Validates that the top-level response and its first task both succeeded, and
  * returns that (SDK-typed) task. The single status / billing ladder shared by
  * every endpoint:
@@ -269,6 +284,7 @@ export function assertOk<T extends DataforseoTaskLike>(
   if (response.status_code !== 20000) {
     const message = response.status_message || "DataForSEO request failed";
     throw (
+      unverifiedAccountError(response.status_code) ??
       classify?.(response.status_code, message, classifyPath ?? "") ??
       failedResponseError(response, message)
     );
@@ -284,7 +300,9 @@ export function assertOk<T extends DataforseoTaskLike>(
 
     const message = task.status_message || "DataForSEO task failed";
     const path = classifyPath ?? (task.path ? `/${task.path.join("/")}` : "");
-    const classified = classify?.(task.status_code, message, path);
+    const classified =
+      unverifiedAccountError(task.status_code) ??
+      classify?.(task.status_code, message, path);
     if (classified) throw classified;
 
     const detailedMessage = describeInvalidField(message, task);

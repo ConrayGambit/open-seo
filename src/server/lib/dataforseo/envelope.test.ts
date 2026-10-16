@@ -79,6 +79,14 @@ describe("assertOk", () => {
     ).toThrow(expect.objectContaining({ code: "UPSTREAM_UNAVAILABLE" }));
   });
 
+  it("names an unverified DataForSEO account (40104) instead of an internal error", () => {
+    expect(() =>
+      assertOk({ status_code: 40104, status_message: "Verify your account" }),
+    ).toThrow(
+      expect.objectContaining({ code: "DATAFORSEO_ACCOUNT_UNVERIFIED" }),
+    );
+  });
+
   it("uses the classifier for account failures before charging billed task metadata", () => {
     const classify = vi.fn(
       () =>
