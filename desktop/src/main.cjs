@@ -242,11 +242,13 @@ function runToCompletion(args, env, log) {
   });
 }
 
-function portIsFree(port) {
+// Resolves null when the port can be used, otherwise the error code:
+// EADDRINUSE (another program) or EACCES (reserved by Windows, e.g. Hyper-V).
+function portError(port) {
   return new Promise((resolve) => {
     const probe = net.createServer();
-    probe.once("error", () => resolve(false));
-    probe.listen(port, "127.0.0.1", () => probe.close(() => resolve(true)));
+    probe.once("error", (error) => resolve(error.code ?? "unknown"));
+    probe.listen(port, "127.0.0.1", () => probe.close(() => resolve(null)));
   });
 }
 
@@ -270,8 +272,11 @@ function stopOrphanedServers() {
   );
 }
 
+// Try the nearby ports first: they stay below Windows' dynamic range
+// (49152+), which Windows hands out for outgoing connections and reserves.
 async function pickPort(preferred) {
-  if (await portIsFree(preferred)) return preferred;
+  for (let port = preferred; port < preferred + 10 && port <= 65535; port++)
+    if (!(await portError(port))) return port;
   return new Promise((resolve, reject) => {
     const probe = net.createServer();
     probe.once("error", reject);
@@ -309,7 +314,7 @@ async function startServer(settings) {
   );
 
   // Leftovers from a hard kill also hold the database, so clear them first.
-  if (!(await portIsFree(settings.port))) {
+  if (await portError(settings.port)) {
     stopOrphanedServers();
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
@@ -337,7 +342,9 @@ async function startServer(settings) {
   if (port !== settings.port) {
     // Keep the new port from now on, so agent (MCP) connections and Google
     // redirect URIs only need updating once.
-    log.write(`Port ${settings.port} is in use; switching to ${port}.\n`);
+    log.write(
+      `Port ${settings.port} is unavailable (${await portError(settings.port)}); switching to ${port}.\n`,
+    );
     notifyPortChange(settings.port, port);
     settings.port = port;
     saveSettings(settings);
@@ -427,6 +434,11 @@ function originOf(url) {
   }
 }
 
+// Google sign-in finishes in the default browser, so the app window does not
+// see the new connection. Reload it when the user comes back for a while after.
+const GOOGLE_SIGN_IN_WINDOW_MS = 10 * 60_000;
+let googleSignInUntil = 0;
+
 const GOOGLE_SETUP_GUIDE =
   "https://github.com/ConrayGambit/open-seo/blob/main/docs/WINDOWS_DESKTOP.md#google-search-console-and-analytics";
 
@@ -443,14 +455,16 @@ const DESKTOP_GUIDES = {
 // ...) reach Windows protocol handlers, and links can come from crawled pages
 // shown in audits and SERP tables.
 function openInBrowser(url) {
-  let protocol;
+  let parsed;
   try {
-    protocol = new URL(url).protocol;
+    parsed = new URL(url);
   } catch {
     return;
   }
-  if (["https:", "http:", "mailto:"].includes(protocol))
-    shell.openExternal(DESKTOP_GUIDES[url] ?? url);
+  if (!["https:", "http:", "mailto:"].includes(parsed.protocol)) return;
+  if (parsed.host === "accounts.google.com")
+    googleSignInUntil = Date.now() + GOOGLE_SIGN_IN_WINDOW_MS;
+  shell.openExternal(DESKTOP_GUIDES[url] ?? url);
 }
 
 function showMainWindow() {
@@ -536,6 +550,10 @@ function createMainWindow() {
     if (quitting || !loadSettings().keepRunningInTray) return;
     event.preventDefault();
     hideToTray();
+  });
+  mainWindow.on("focus", () => {
+    if (Date.now() < googleSignInUntil && server)
+      mainWindow.webContents.reload();
   });
   mainWindow.on("closed", () => {
     mainWindow = null;
