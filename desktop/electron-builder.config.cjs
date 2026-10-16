@@ -1,12 +1,13 @@
 // electron-builder config for the Windows installer (NSIS, x64).
-const { version } = require("../package.json");
+const { version } = require("./package.json");
 
 /** @type {import("electron-builder").Configuration} */
 module.exports = {
   appId: "so.openseo.desktop",
   productName: "OpenSEO",
   executableName: "OpenSEO",
-  // The desktop app versions with the OpenSEO app it bundles.
+  // The installer has its own version, bumped on every build we hand out, so
+  // each release is distinct even when the bundled OpenSEO app is unchanged.
   extraMetadata: { version },
   // No auto-update feed yet; installers are published by the GitHub workflow.
   publish: null,

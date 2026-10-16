@@ -133,7 +133,7 @@ For working on the web app itself, see [`docs/LOCAL_DEVELOPMENT.md`](./docs/LOCA
 
 ### Releasing
 
-Push a tag starting with `desktop-v` (for example `desktop-v0.1.13`). The workflow builds the installer and attaches it to a draft GitHub release for you to review and publish. The app version follows the upstream `package.json` version.
+Push a tag starting with `desktop-v` (for example `desktop-v0.1.14`). The workflow builds the installer and attaches it to a draft GitHub release for you to review and publish. The installer version is `desktop/package.json`; bump it for every build you hand out. The OpenSEO version it bundles still follows the root `package.json`.
 
 ### Staying up to date with upstream
 
