@@ -83,6 +83,7 @@ Most problems leave a clue in `%APPDATA%\OpenSEO\logs\server.log` (**File → Op
 - **Keyword, domain or backlink data fails to load.** DataForSEO is rejecting the request. An HTTP 401 or 403 in `server.log` almost always means one of these:
   - The key is wrong. Paste the **Base64** credentials from [DataForSEO API Access](https://app.dataforseo.com/api-access), which encode your email and _API password_, not your account password. See [`DATAFORSEO_API_KEY.md`](./DATAFORSEO_API_KEY.md).
   - Your DataForSEO balance is empty. Check it in the [DataForSEO dashboard](https://app.dataforseo.com/) and top up.
+  - Your DataForSEO account isn't verified yet (error `40104` in `server.log`). Finish the verification steps in the [DataForSEO dashboard](https://app.dataforseo.com/); the key works as soon as the account is verified.
 
   After fixing it, save the key in **File → Settings…**; saving restarts the server.
 
