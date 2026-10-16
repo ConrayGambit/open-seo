@@ -56,6 +56,13 @@ const SECRET_KEYS = [
   "CRAWLER_ACCESS_SECRET",
 ];
 
+// Models SAM can use through OpenRouter; "" keeps OpenSEO's default (GPT).
+const SAM_MODELS = [
+  "",
+  "anthropic/claude-sonnet-5.5",
+  "anthropic/claude-opus-5.5",
+];
+
 // Optional keys the settings window edits; a blank field keeps the saved value.
 const OPTIONAL_KEYS = [
   "OPENROUTER_API_KEY",
@@ -93,6 +100,7 @@ function loadSettings() {
   const settings = {
     port: raw.port ?? PREFERRED_PORT,
     telemetryDisabled: raw.telemetryDisabled ?? false,
+    samModel: raw.samModel ?? "",
     keepRunningInTray: raw.keepRunningInTray ?? true,
     openAtLogin: raw.openAtLogin ?? false,
     trayHintShown: raw.trayHintShown ?? false,
@@ -111,6 +119,7 @@ function saveSettings(settings) {
       {
         port: settings.port,
         telemetryDisabled: settings.telemetryDisabled,
+        samModel: settings.samModel,
         keepRunningInTray: settings.keepRunningInTray,
         openAtLogin: settings.openAtLogin,
         trayHintShown: settings.trayHintShown,
@@ -217,6 +226,7 @@ function wranglerEnv(settings) {
     env.GOOGLE_CLIENT_SECRET = google.clientSecret;
   }
   if (settings.telemetryDisabled) env.OPENSEO_TELEMETRY_DISABLED = "1";
+  if (settings.samModel) env.OPENROUTER_MODEL = settings.samModel;
   return env;
 }
 
@@ -719,6 +729,7 @@ ipcMain.handle("settings:get", () => {
     googleClientId: settings.GOOGLE_CLIENT_ID,
     builtInGoogle: Boolean(builtInGoogleClient()),
     telemetryDisabled: settings.telemetryDisabled,
+    samModel: settings.samModel,
     keepRunningInTray: settings.keepRunningInTray,
     openAtLogin: settings.openAtLogin,
     port: settings.port,
@@ -735,6 +746,7 @@ ipcMain.handle("settings:save", async (_event, input) => {
     if (value) settings[key] = value;
   }
   settings.telemetryDisabled = Boolean(input?.telemetryDisabled);
+  if (SAM_MODELS.includes(input?.samModel)) settings.samModel = input.samModel;
   settings.keepRunningInTray = Boolean(input?.keepRunningInTray);
   settings.openAtLogin = Boolean(input?.openAtLogin);
   const port = Number(input?.port);

@@ -19,6 +19,7 @@ $("port").addEventListener("input", showAddresses);
 window.openseoDesktop.getSettings().then((settings) => {
   $("data-dir").textContent = settings.dataDir;
   $("port").value = settings.port;
+  $("samModel").value = settings.samModel;
   showAddresses();
   for (const id of ["telemetryDisabled", "keepRunningInTray", "openAtLogin"]) {
     $(id).checked = settings[id];
@@ -56,6 +57,7 @@ $("form").addEventListener("submit", async (event) => {
     keepRunningInTray: $("keepRunningInTray").checked,
     openAtLogin: $("openAtLogin").checked,
     port: $("port").value,
+    samModel: $("samModel").value,
   });
   if (!result.ok) {
     $("error").textContent = result.error;

@@ -26,16 +26,17 @@ Everything is stored in `%APPDATA%\OpenSEO`:
 
 **File → Settings…** (or the tray icon's menu) changes your keys and app options. Saving restarts the local server. Leave a key field blank to keep its saved value.
 
-| Setting                                 | What it turns on                                                                           |
-| --------------------------------------- | ------------------------------------------------------------------------------------------ |
-| DataForSEO API key                      | Required. All SEO data.                                                                    |
-| OpenRouter API key                      | SAM, the in-app SEO agent, and AI prompt suggestions.                                      |
-| Context.dev API key                     | "Render JavaScript" in site audits, for sites built with React, Vue and similar.           |
-| Google client ID and secret             | Google Search Console and Google Analytics 4. See below.                                   |
-| Keep running in the system tray         | On by default. Closing the window keeps OpenSEO running so scheduled work continues.       |
-| Start OpenSEO when I sign in to Windows | Starts OpenSEO in the tray at sign-in, without opening a window.                           |
-| Turn off the anonymous usage heartbeat  | The telemetry described in [`SELF_HOSTING_DOCKER.md`](./SELF_HOSTING_DOCKER.md#telemetry). |
-| Local port                              | The port OpenSEO serves on (default 47321). See below.                                     |
+| Setting                                 | What it turns on                                                                            |
+| --------------------------------------- | ------------------------------------------------------------------------------------------- |
+| DataForSEO API key                      | Required. All SEO data.                                                                     |
+| OpenRouter API key                      | SAM, the in-app SEO agent, and AI prompt suggestions.                                       |
+| SAM model                               | The model SAM uses through OpenRouter: GPT (default), Claude Sonnet 5.5 or Claude Opus 5.5. |
+| Context.dev API key                     | "Render JavaScript" in site audits, for sites built with React, Vue and similar.            |
+| Google client ID and secret             | Google Search Console and Google Analytics 4. See below.                                    |
+| Keep running in the system tray         | On by default. Closing the window keeps OpenSEO running so scheduled work continues.        |
+| Start OpenSEO when I sign in to Windows | Starts OpenSEO in the tray at sign-in, without opening a window.                            |
+| Turn off the anonymous usage heartbeat  | The telemetry described in [`SELF_HOSTING_DOCKER.md`](./SELF_HOSTING_DOCKER.md#telemetry).  |
+| Local port                              | The port OpenSEO serves on (default 47321). See below.                                      |
 
 ## Local port and AI agents
 

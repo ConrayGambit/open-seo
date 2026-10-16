@@ -70,7 +70,8 @@
       }
       input[type="password"],
       input[type="text"],
-      input[type="number"] {
+      input[type="number"],
+      select {
         box-sizing: border-box;
         width: 100%;
         padding: 8px 10px;
@@ -185,6 +186,18 @@
       />
       <p class="hint">
         Turns on SAM, the in-app SEO agent, and AI prompt suggestions.
+      </p>
+
+      <label for="samModel">SAM model</label>
+      <select id="samModel">
+        <option value="">GPT (OpenSEO default)</option>
+        <option value="anthropic/claude-sonnet-5.5">Claude Sonnet 5.5</option>
+        <option value="anthropic/claude-opus-5.5">
+          Claude Opus 5.5 (stronger, costs more)
+        </option>
+      </select>
+      <p class="hint">
+        Billed to your OpenRouter account at that model's price.
       </p>
 
       <label for="CONTEXT_API_KEY"
