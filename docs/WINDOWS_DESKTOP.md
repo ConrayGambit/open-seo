@@ -35,6 +35,17 @@ Everything is stored in `%APPDATA%\OpenSEO`:
 | Keep running in the system tray         | On by default. Closing the window keeps OpenSEO running so scheduled work continues.       |
 | Start OpenSEO when I sign in to Windows | Starts OpenSEO in the tray at sign-in, without opening a window.                           |
 | Turn off the anonymous usage heartbeat  | The telemetry described in [`SELF_HOSTING_DOCKER.md`](./SELF_HOSTING_DOCKER.md#telemetry). |
+| Local port                              | The port OpenSEO serves on (default 47321). See below.                                     |
+
+## Local port and AI agents
+
+OpenSEO serves on `http://127.0.0.1:47321` and keeps that port between launches. Connect AI agents such as Claude Code to its MCP endpoint, shown in **Settings → Connections**:
+
+```
+http://127.0.0.1:47321/mcp
+```
+
+If another program is already using the port, OpenSEO switches to a free one, keeps using it from then on, and shows a notification with the new address. Update your agent connections and Google redirect URIs once when that happens, or set the port back in Settings.
 
 ## Background work
 
@@ -49,7 +60,7 @@ Rank tracking, AI visibility schedules and audit cleanup run every five minutes,
 3. Paste the client ID and secret into Settings and save.
 4. Click **Connect** in OpenSEO. Google's consent page opens in your default browser; after you approve, return to the OpenSEO window and refresh (**View → Reload**).
 
-OpenSEO always tries port 47321. If another program is using it, OpenSEO picks a different port and Google sign-in fails until that port is free again.
+If you change the [local port](#local-port-and-ai-agents), add the new redirect URIs to your Google OAuth client too.
 
 ## Building the installer yourself
 

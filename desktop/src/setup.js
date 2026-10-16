@@ -8,10 +8,18 @@ const OPTIONAL_KEYS = [
 ];
 const SAVED = "Saved. Leave blank to keep it.";
 
+function showAddresses() {
+  const origin = `http://127.0.0.1:${$("port").value}`;
+  $("mcp-url").textContent = `${origin}/mcp`;
+  $("redirect-gsc").textContent = `${origin}/api/gsc/oauth/callback`;
+  $("redirect-ga4").textContent = `${origin}/api/ga4/oauth/callback`;
+}
+$("port").addEventListener("input", showAddresses);
+
 window.openseoDesktop.getSettings().then((settings) => {
   $("data-dir").textContent = settings.dataDir;
-  $("redirect-gsc").textContent = `${settings.origin}/api/gsc/oauth/callback`;
-  $("redirect-ga4").textContent = `${settings.origin}/api/ga4/oauth/callback`;
+  $("port").value = settings.port;
+  showAddresses();
   for (const id of ["telemetryDisabled", "keepRunningInTray", "openAtLogin"]) {
     $(id).checked = settings[id];
   }
@@ -43,6 +51,7 @@ $("form").addEventListener("submit", async (event) => {
     telemetryDisabled: $("telemetryDisabled").checked,
     keepRunningInTray: $("keepRunningInTray").checked,
     openAtLogin: $("openAtLogin").checked,
+    port: $("port").value,
   });
   if (!result.ok) {
     $("error").textContent = result.error;

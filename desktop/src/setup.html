@@ -69,7 +69,8 @@
         margin: 6px 0 0;
       }
       input[type="password"],
-      input[type="text"] {
+      input[type="text"],
+      input[type="number"] {
         box-sizing: border-box;
         width: 100%;
         padding: 8px 10px;
@@ -234,6 +235,19 @@
           spellcheck="false"
         />
       </details>
+
+      <h2>Connections</h2>
+      <label for="port">Local port</label>
+      <input id="port" type="number" min="1024" max="65535" required />
+      <p class="hint">
+        OpenSEO keeps this port so links stay the same. Connect AI agents such
+        as Claude Code to this MCP address:
+      </p>
+      <code id="mcp-url"></code>
+      <p class="hint">
+        If you change the port, update your agent connections and the Google
+        redirect URIs too.
+      </p>
 
       <h2>App</h2>
       <label class="check"

@@ -227,6 +227,26 @@ function portIsFree(port) {
   });
 }
 
+// A hard kill of OpenSEO (installer, Task Manager, crash) can leave the old
+// wrangler and workerd processes running and holding the port. Stop the ones
+// started from this install so the saved port is free again.
+function stopOrphanedServers() {
+  if (process.platform !== "win32") return;
+  const root = (
+    app.isPackaged ? path.dirname(process.execPath) : path.join(__dirname, "..")
+  ).replaceAll("'", "''");
+  const script = `Get-CimInstance Win32_Process | Where-Object {
+    $_.ProcessId -ne ${process.pid} -and $_.ExecutablePath -and
+    $_.ExecutablePath.StartsWith('${root}', 'OrdinalIgnoreCase') -and
+    ($_.Name -eq 'workerd.exe' -or $_.CommandLine -like '*wrangler-dist*')
+  } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`;
+  spawnSync(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-Command", script],
+    { windowsHide: true, timeout: 15_000 },
+  );
+}
+
 async function pickPort(preferred) {
   if (await portIsFree(preferred)) return preferred;
   return new Promise((resolve, reject) => {
@@ -265,6 +285,12 @@ async function startServer(settings) {
     `\n--- OpenSEO ${runtime.version} starting ${new Date().toISOString()} ---\n`,
   );
 
+  // Leftovers from a hard kill also hold the database, so clear them first.
+  if (!(await portIsFree(settings.port))) {
+    stopOrphanedServers();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
   const serverConfig = path.join(runtime.dir, "server", "wrangler.json");
   const auditConfig = path.join(runtime.dir, "open_seo_audit", "wrangler.json");
 
@@ -285,10 +311,14 @@ async function startServer(settings) {
   );
 
   const port = await pickPort(settings.port);
-  if (port !== settings.port)
-    log.write(
-      `Port ${settings.port} is in use; using ${port}. Google sign-in needs the saved port.\n`,
-    );
+  if (port !== settings.port) {
+    // Keep the new port from now on, so agent (MCP) connections and Google
+    // redirect URIs only need updating once.
+    log.write(`Port ${settings.port} is in use; switching to ${port}.\n`);
+    notifyPortChange(settings.port, port);
+    settings.port = port;
+    saveSettings(settings);
+  }
   const child = spawn(
     process.execPath,
     wranglerArgs([
@@ -433,6 +463,14 @@ function hideToTray() {
   }).show();
   settings.trayHintShown = true;
   saveSettings(settings);
+}
+
+function notifyPortChange(from, to) {
+  if (!Notification.isSupported()) return;
+  new Notification({
+    title: `OpenSEO moved to port ${to}`,
+    body: `Port ${from} was in use. Update agent connections to http://127.0.0.1:${to}/mcp. You can change the port in Settings.`,
+  }).show();
 }
 
 function applyLoginItem(settings) {
@@ -632,7 +670,7 @@ ipcMain.handle("settings:get", () => {
     telemetryDisabled: settings.telemetryDisabled,
     keepRunningInTray: settings.keepRunningInTray,
     openAtLogin: settings.openAtLogin,
-    origin: `http://127.0.0.1:${settings.port}`,
+    port: settings.port,
     dataDir: userData,
   };
 });
@@ -648,6 +686,13 @@ ipcMain.handle("settings:save", async (_event, input) => {
   settings.telemetryDisabled = Boolean(input?.telemetryDisabled);
   settings.keepRunningInTray = Boolean(input?.keepRunningInTray);
   settings.openAtLogin = Boolean(input?.openAtLogin);
+  const port = Number(input?.port);
+  if (!Number.isInteger(port) || port < 1024 || port > 65535)
+    return {
+      ok: false,
+      error: "The port must be a number from 1024 to 65535.",
+    };
+  settings.port = port;
   if (!settings.DATAFORSEO_API_KEY)
     return { ok: false, error: "A DataForSEO API key is required." };
   saveSettings(settings);
