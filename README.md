@@ -73,14 +73,14 @@ You pay DataForSEO directly for the data you use; there is no OpenSEO subscripti
 
 ### Using the app
 
-| Menu                        | What it does                                                                          |
-| --------------------------- | ------------------------------------------------------------------------------------- |
-| **File → Settings…**        | Change API keys or turn off the anonymous usage heartbeat. Restarts the local server. |
-| **File → Open Data Folder** | Your database, settings and logs. Back this folder up to keep your data.              |
-| **File → Open Logs Folder** | Server logs, useful when reporting a problem.                                         |
-| **File → Restart Server**   | Restarts OpenSEO's local server without closing the window.                           |
+| Menu                        | What it does                                                                                  |
+| --------------------------- | --------------------------------------------------------------------------------------------- |
+| **File → Settings…**        | API keys, Google client, local port and MCP address, tray options. Restarts the local server. |
+| **File → Open Data Folder** | Your database, settings and logs. Back this folder up to keep your data.                      |
+| **File → Open Logs Folder** | Server logs, useful when reporting a problem.                                                 |
+| **File → Restart Server**   | Restarts OpenSEO's local server without closing the window.                                   |
 
-Full details: [`docs/WINDOWS_DESKTOP.md`](./docs/WINDOWS_DESKTOP.md).
+Full details: [`docs/WINDOWS_DESKTOP.md`](./docs/WINDOWS_DESKTOP.md). Something not working? See [Troubleshooting](./docs/WINDOWS_DESKTOP.md#troubleshooting).
 
 ### Current limitations
 

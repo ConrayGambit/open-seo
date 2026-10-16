@@ -65,6 +65,40 @@ Otherwise, use your own Google OAuth client. One client covers both. It takes ab
 4. Copy the client ID and client secret into **Settings → Google Search Console and Analytics** and click **Save and restart**.
 5. Click **Connect** on the Search Console or GA4 card. Google's consent page opens in your default browser; after you approve, return to the OpenSEO window and refresh (**View → Reload**), then pick your property.
 
+## Troubleshooting
+
+Most problems leave a clue in `%APPDATA%\OpenSEO\logs\server.log` (**File → Open Logs Folder**). Include that file when you report a problem.
+
+### Installing and starting
+
+- **"Windows protected your PC" when installing.** The installer is not code-signed yet. Choose **More info → Run anyway**.
+- **Stuck on the loading screen.** The first start, and the first start after an update, creates or updates the database and can take a minute or two. If it takes longer, use **File → Restart Server**, then check `server.log`.
+- **"OpenSEO could not start" or "OpenSEO stopped".** The message names the log file; the last lines of `server.log` say why. Restarting OpenSEO usually clears a one-off failure. If your antivirus quarantined `workerd.exe` (the local server), restore it and allow it, then reinstall.
+- **Settings asks for your DataForSEO key again.** Keys are encrypted for your Windows account, so they can't be read after a Windows reset or from a `settings.json` copied from another PC. Enter them again.
+- **Starting over.** Quit OpenSEO from the tray icon, rename `%APPDATA%\OpenSEO`, and open OpenSEO again. Renaming instead of deleting keeps your old data in case you need it.
+
+### SEO data
+
+- **Keyword, domain or backlink data fails to load.** DataForSEO is rejecting the request. An HTTP 401 or 403 in `server.log` almost always means one of these:
+  - The key is wrong. Paste the **Base64** credentials from [DataForSEO API Access](https://app.dataforseo.com/api-access), which encode your email and _API password_, not your account password. See [`DATAFORSEO_API_KEY.md`](./DATAFORSEO_API_KEY.md).
+  - Your DataForSEO balance is empty. Check it in the [DataForSEO dashboard](https://app.dataforseo.com/) and top up.
+
+  After fixing it, save the key in **File → Settings…**; saving restarts the server.
+
+### AI agents and the local port
+
+- **Claude Code or another agent can't connect.** Open **File → Settings… → Connections** and copy the MCP address shown there into your agent's configuration. The address includes OpenSEO's port, which may not be the default 47321 on your PC.
+- **OpenSEO moved to a different port.** `server.log` says why: `EADDRINUSE` means another program uses the port; `EACCES` means Windows has reserved it (common with Hyper-V, WSL or Docker). To see Windows' reserved ranges, run `netsh interface ipv4 show excludedportrange protocol=tcp` in a terminal. OpenSEO keeps the new port from then on, or you can choose one outside those ranges in Settings.
+
+### Google Search Console and Analytics
+
+- **"Google OAuth client not configured".** No Google client is set. Add one in **Settings** as described in [Google Search Console and Analytics](#google-search-console-and-analytics).
+- **"Google hasn't verified this app".** Expected for a client that Google hasn't verified. Click **Advanced → Go to OpenSEO**.
+- **`access_denied`.** The OAuth consent screen is in **Testing** and your Google account isn't a test user. Add it under **Audience → Test users**, or publish the app.
+- **`redirect_uri_mismatch`.** You're using a **Web application** client and its redirect URIs don't match OpenSEO's port. Add the two URIs shown in Settings, or switch to a **Desktop app** client, which works on any port.
+- **Signed in, but OpenSEO still says "Not connected".** Sign-in finishes in your browser. Switch back to the OpenSEO window; it refreshes after a Google sign-in. If not, use **View → Reload**. You can close the browser tab.
+- **Disconnected again after about a week.** Google expires sign-ins after seven days while the consent screen is in **Testing**. Publish the app (**Audience → Publish app**), then click **Connect** once more.
+
 ## Building the installer yourself
 
 On Windows, with Node 22 and pnpm:
