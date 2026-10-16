@@ -10,12 +10,12 @@ Project settings gain a **Connect WordPress** action. It opens the site's own au
 
 Once connected, supported audit issues gain a **Fix** button:
 
-| Audit issue | Fix | Where it is written |
-| --- | --- | --- |
-| Title missing, too long or too short | Edit the SEO title | Yoast or Rank Math title field, through the companion plugin |
-| Meta description missing, too long or too short | Edit the meta description | Yoast or Rank Math description field, through the companion plugin |
-| Image missing alt text | Set alt text on the media item | Core REST `media` endpoint |
-| Thin, duplicate or unwanted page | Set the page to draft | Core REST `pages` or `posts` endpoint |
+| Audit issue                                     | Fix                            | Where it is written                                                |
+| ----------------------------------------------- | ------------------------------ | ------------------------------------------------------------------ |
+| Title missing, too long or too short            | Edit the SEO title             | Yoast or Rank Math title field, through the companion plugin       |
+| Meta description missing, too long or too short | Edit the meta description      | Yoast or Rank Math description field, through the companion plugin |
+| Image missing alt text                          | Set alt text on the media item | Core REST `media` endpoint                                         |
+| Thin, duplicate or unwanted page                | Set the page to draft          | Core REST `pages` or `posts` endpoint                              |
 
 Fix opens a panel with the current value read live from the site, an editable proposed value, and the checks the audit used (length, presence). Nothing is written until the user presses **Apply**. Bulk apply takes the same preview as a table.
 
