@@ -54,6 +54,8 @@ const SECRET_KEYS = [
   "CONTEXT_API_KEY",
   "BETTER_AUTH_SECRET",
   "CRAWLER_ACCESS_SECRET",
+  // Encrypts WordPress application passwords in the database.
+  "WORDPRESS_CREDENTIALS_SECRET",
 ];
 
 // Models SAM can use through OpenRouter; "" keeps OpenSEO's default (GPT).
@@ -134,7 +136,11 @@ function saveSettings(settings) {
 // Local-only secrets the self-host stack expects; generated once per install.
 function ensureGeneratedSecrets(settings) {
   let changed = false;
-  for (const key of ["BETTER_AUTH_SECRET", "CRAWLER_ACCESS_SECRET"]) {
+  for (const key of [
+    "BETTER_AUTH_SECRET",
+    "CRAWLER_ACCESS_SECRET",
+    "WORDPRESS_CREDENTIALS_SECRET",
+  ]) {
     if (!settings[key]) {
       settings[key] = crypto.randomBytes(32).toString("hex");
       changed = true;
@@ -218,6 +224,8 @@ function wranglerEnv(settings) {
     CLOUDFLARE_INCLUDE_PROCESS_ENV: "true",
     AUTH_MODE: "local_noauth",
     VITE_SHOW_DEVTOOLS: "false",
+    // Tells the app to receive WordPress connections as openseo:// links.
+    OPENSEO_DESKTOP: "1",
   };
   for (const key of SECRET_KEYS) if (settings[key]) env[key] = settings[key];
   const google = googleClient(settings);
@@ -417,6 +425,7 @@ async function startScheduler(runtimeDir, port, log) {
 }
 
 function stopServer() {
+  serverReady = false;
   if (!server) return;
   const { child, stopScheduler } = server;
   server = null;
@@ -635,6 +644,8 @@ async function launch() {
   try {
     const origin = await startServer(settings);
     mainWindow?.loadURL(origin);
+    serverReady = true;
+    if (pendingLink) handleLink(pendingLink);
   } catch (error) {
     console.error(error);
     dialog.showErrorBox(
@@ -716,6 +727,58 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
+// ---------- openseo:// links ----------
+
+// WordPress's Authorize Application screen only hands its new password to an
+// https address or an app link, never to plain http on 127.0.0.1. So the app
+// registers openseo:// and forwards the approval to the local server by POST,
+// which keeps the password out of URLs and logs.
+const LINK_SCHEME = "openseo";
+let serverReady = false;
+let pendingLink = null;
+
+function registerLinkScheme() {
+  if (process.defaultApp && process.argv.length >= 2) {
+    // `electron .` in development: Windows must relaunch with the app path.
+    app.setAsDefaultProtocolClient(LINK_SCHEME, process.execPath, [
+      path.resolve(process.argv[1]),
+    ]);
+  } else {
+    app.setAsDefaultProtocolClient(LINK_SCHEME);
+  }
+}
+
+function linkFromArgv(argv) {
+  return argv.find((arg) => arg.startsWith(`${LINK_SCHEME}://`)) ?? null;
+}
+
+function handleLink(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return;
+  }
+  if (
+    parsed.protocol !== `${LINK_SCHEME}:` ||
+    parsed.host !== "wordpress" ||
+    parsed.pathname !== "/callback"
+  )
+    return;
+  if (!serverReady || !mainWindow) {
+    pendingLink = parsed.href;
+    return;
+  }
+  pendingLink = null;
+  mainWindow.loadURL(`${server.origin}/api/wordpress/callback`, {
+    postData: [
+      { type: "rawData", bytes: Buffer.from(parsed.searchParams.toString()) },
+    ],
+    extraHeaders: "Content-Type: application/x-www-form-urlencoded",
+  });
+  showMainWindow();
+}
+
 // ---------- IPC from the settings window ----------
 
 ipcMain.handle("settings:get", () => {
@@ -773,7 +836,12 @@ ipcMain.handle("settings:save", async (_event, input) => {
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on("second-instance", () => {
+  // Started by an openseo:// link while OpenSEO wasn't running.
+  pendingLink = linkFromArgv(process.argv);
+
+  app.on("second-instance", (_event, argv) => {
+    const link = linkFromArgv(argv);
+    if (link) return handleLink(link);
     if (mainWindow) return showMainWindow();
     setupWindow?.focus();
   });
@@ -782,8 +850,14 @@ if (!app.requestSingleInstanceLock()) {
     // Windows ties notifications and taskbar grouping to this id.
     if (process.platform === "win32")
       app.setAppUserModelId("so.openseo.desktop");
+    registerLinkScheme();
     buildMenu();
     launch();
+  });
+
+  app.on("open-url", (event, url) => {
+    event.preventDefault();
+    handleLink(url);
   });
 
   app.on("before-quit", () => {
