@@ -28,6 +28,10 @@ window.openseoDesktop.getSettings().then((settings) => {
     if (settings.saved[key])
       document.querySelector(`[data-saved="${key}"]`).textContent = SAVED;
   }
+  if (settings.builtInGoogle) {
+    $("google-built-in").hidden = false;
+    $("google-summary").textContent = "Use your own Google client (optional)";
+  }
   if (settings.googleClientId) {
     $("GOOGLE_CLIENT_ID").placeholder = settings.googleClientId;
     $("google").open = true;

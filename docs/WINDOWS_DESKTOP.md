@@ -45,7 +45,7 @@ OpenSEO serves on `http://127.0.0.1:47321` and keeps that port between launches.
 http://127.0.0.1:47321/mcp
 ```
 
-If another program is already using the port, OpenSEO switches to a free one, keeps using it from then on, and shows a notification with the new address. Update your agent connections and Google redirect URIs once when that happens, or set the port back in Settings.
+If another program is already using the port, OpenSEO switches to a free one, keeps using it from then on, and shows a notification with the new address. Update your agent connections once when that happens (and the redirect URIs, if you use a Web application Google client), or set the port back in Settings.
 
 ## Background work
 
@@ -53,19 +53,17 @@ Rank tracking, AI visibility schedules and audit cleanup run every five minutes,
 
 ## Google Search Console and Analytics
 
-Search Console and Google Analytics 4 use your own Google OAuth client. One client covers both. It takes about ten minutes in the [Google Cloud Console](https://console.cloud.google.com/):
+If your installer was built with a Google client (see [Building the installer yourself](#building-the-installer-yourself)), Settings says sign-in is built in: click **Connect** on the Search Console or GA4 card, approve in your browser, then return to OpenSEO and refresh (**View → Reload**).
+
+Otherwise, use your own Google OAuth client. One client covers both. It takes about ten minutes in the [Google Cloud Console](https://console.cloud.google.com/):
 
 1. Create a project (or pick one) and enable the APIs you want:
    - Search Console: [Google Search Console API](https://console.cloud.google.com/apis/library/searchconsole.googleapis.com)
    - GA4: [Google Analytics Admin API](https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com) and [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com)
-2. Under **APIs & Services → OAuth consent screen**, choose **External**, fill in the app name and your email, and add the Google account you will connect as a **test user**. Testing mode is enough for personal use; without the test user Google blocks sign-in with `access_denied`.
-3. Under **APIs & Services → Credentials → Create credentials → OAuth client ID**, choose **Web application** and add both redirect URIs shown in OpenSEO's **Settings → Google Search Console and Analytics**. With the default port they are:
-   - `http://127.0.0.1:47321/api/gsc/oauth/callback`
-   - `http://127.0.0.1:47321/api/ga4/oauth/callback`
-4. Copy the client ID and client secret into that Settings section and click **Save and restart**.
+2. Under **APIs & Services → OAuth consent screen**, choose **External**, fill in the app name and your email, and add the Google account you will connect as a **test user**. Without the test user Google blocks sign-in with `access_denied`. In **Testing** status Google signs you out after seven days; **Publish app** avoids that, at the cost of an "unverified app" warning you click through.
+3. Under **APIs & Services → Credentials → Create credentials → OAuth client ID**, choose **Desktop app**. It works on any local port, so there are no redirect URIs to add. (A **Web application** client also works if you add both redirect URIs shown in Settings.)
+4. Copy the client ID and client secret into **Settings → Google Search Console and Analytics** and click **Save and restart**.
 5. Click **Connect** on the Search Console or GA4 card. Google's consent page opens in your default browser; after you approve, return to the OpenSEO window and refresh (**View → Reload**), then pick your property.
-
-If you change the [local port](#local-port-and-ai-agents), add the new redirect URIs to your Google OAuth client too.
 
 ## Building the installer yourself
 
@@ -77,6 +75,6 @@ pnpm --dir desktop install
 pnpm --dir desktop run dist:win
 ```
 
-The installer is written to `desktop/release/`. Building on Linux or macOS also works if [Wine](https://www.winehq.org/) is installed. `pnpm --dir desktop start` builds the app and opens it without packaging.
+The installer is written to `desktop/release/`. To build in one-click Google sign-in, create a **Desktop app** OAuth client as in steps 1–3 above and set `OPENSEO_DESKTOP_GOOGLE_CLIENT_ID` and `OPENSEO_DESKTOP_GOOGLE_CLIENT_SECRET` when building (the Windows workflow reads them from repository secrets of the same names). Anyone with the installer can read these values; Google expects that for desktop apps. Before Google verifies the app, users see an "unverified app" warning and at most 100 Google accounts can connect. Building on Linux or macOS also works if [Wine](https://www.winehq.org/) is installed. `pnpm --dir desktop start` builds the app and opens it without packaging.
 
 Under the hood, the app is an Electron window around the regular OpenSEO build. It serves the built app locally with Cloudflare's `workerd` runtime (via `wrangler dev`), the same runtime the Docker image uses, on `127.0.0.1` only.

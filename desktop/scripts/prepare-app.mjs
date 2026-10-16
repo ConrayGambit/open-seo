@@ -73,11 +73,21 @@ cpSync(
   path.join(rootDir, "scripts", "selfhost-scheduler.mjs"),
   path.join(outDir, "selfhost-scheduler.mjs"),
 );
+// Optional built-in Google OAuth client ("Desktop app" type), so Search
+// Console and GA4 connect in one click. Google treats a desktop client's secret
+// as public, but it still stays out of the repo: pass it when building.
+const googleClientId = process.env.OPENSEO_DESKTOP_GOOGLE_CLIENT_ID?.trim();
+const googleClientSecret =
+  process.env.OPENSEO_DESKTOP_GOOGLE_CLIENT_SECRET?.trim();
 writeFileSync(
   path.join(outDir, "openseo-bundle.json"),
   JSON.stringify({
     version: rootPkg.version,
     builtAt: new Date().toISOString(),
+    google:
+      googleClientId && googleClientSecret
+        ? { clientId: googleClientId, clientSecret: googleClientSecret }
+        : null,
   }),
 );
 

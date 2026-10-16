@@ -202,16 +202,22 @@
         Vue and similar.
       </p>
 
+      <p class="hint" id="google-built-in" hidden>
+        Google Search Console and Analytics sign-in is built in: click Connect
+        on either card in OpenSEO.
+      </p>
       <details id="google">
-        <summary>Google Search Console and Analytics</summary>
+        <summary id="google-summary">
+          Google Search Console and Analytics
+        </summary>
         <p class="hint">
-          Create a Google OAuth client (type “Web application”) as described in
-          the
+          Create a Google OAuth client as described in the
           <a
             href="https://github.com/ConrayGambit/open-seo/blob/main/docs/WINDOWS_DESKTOP.md#google-search-console-and-analytics"
             target="_blank"
             >setup guide</a
-          >, and add both of these as authorized redirect URIs:
+          >. Type “Desktop app” needs nothing else. For type “Web application”,
+          add both of these as authorized redirect URIs:
         </p>
         <code id="redirect-gsc"></code>
         <code id="redirect-ga4"></code>

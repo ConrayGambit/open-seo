@@ -47,6 +47,10 @@ jobs:
 
       - name: Build installer
         run: pnpm --dir desktop run dist:win
+        env:
+          # Optional built-in Google client for one-click Search Console and GA4.
+          OPENSEO_DESKTOP_GOOGLE_CLIENT_ID: ${{ secrets.OPENSEO_DESKTOP_GOOGLE_CLIENT_ID }}
+          OPENSEO_DESKTOP_GOOGLE_CLIENT_SECRET: ${{ secrets.OPENSEO_DESKTOP_GOOGLE_CLIENT_SECRET }}
 
       - name: Smoke test the packaged server
         working-directory: desktop/release/win-unpacked

@@ -142,6 +142,24 @@ function bundleSource() {
     : path.join(__dirname, "..", "build", "openseo");
 }
 
+// The Google client built into this installer, if any (see prepare-app.mjs).
+function builtInGoogleClient() {
+  const bundle = JSON.parse(
+    fs.readFileSync(path.join(bundleSource(), "openseo-bundle.json"), "utf8"),
+  );
+  return bundle.google ?? null;
+}
+
+// The user's own Google client wins; otherwise use the built-in one.
+function googleClient(settings) {
+  if (settings.GOOGLE_CLIENT_ID && settings.GOOGLE_CLIENT_SECRET)
+    return {
+      clientId: settings.GOOGLE_CLIENT_ID,
+      clientSecret: settings.GOOGLE_CLIENT_SECRET,
+    };
+  return builtInGoogleClient();
+}
+
 // wrangler writes .wrangler/tmp next to each Worker config, and the install
 // folder may be read-only, so serve from a per-version copy in user data.
 function prepareRuntime() {
@@ -193,6 +211,11 @@ function wranglerEnv(settings) {
     VITE_SHOW_DEVTOOLS: "false",
   };
   for (const key of SECRET_KEYS) if (settings[key]) env[key] = settings[key];
+  const google = googleClient(settings);
+  if (google) {
+    env.GOOGLE_CLIENT_ID = google.clientId;
+    env.GOOGLE_CLIENT_SECRET = google.clientSecret;
+  }
   if (settings.telemetryDisabled) env.OPENSEO_TELEMETRY_DISABLED = "1";
   return env;
 }
@@ -676,6 +699,7 @@ ipcMain.handle("settings:get", () => {
     saved,
     // Not secret, and shown so the user can check what they pasted.
     googleClientId: settings.GOOGLE_CLIENT_ID,
+    builtInGoogle: Boolean(builtInGoogleClient()),
     telemetryDisabled: settings.telemetryDisabled,
     keepRunningInTray: settings.keepRunningInTray,
     openAtLogin: settings.openAtLogin,
