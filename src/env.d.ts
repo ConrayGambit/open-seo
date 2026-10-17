@@ -39,6 +39,10 @@ declare namespace Cloudflare {
     // Encrypts saved Shopify crawler signatures. Kept separate from
     // BETTER_AUTH_SECRET so the audit worker never holds the auth secret.
     CRAWLER_ACCESS_SECRET?: string;
+    // Encrypts WordPress application passwords (wordpress_connections).
+    WORDPRESS_CREDENTIALS_SECRET?: string;
+    // Set by the Windows desktop app, which receives openseo:// links.
+    OPENSEO_DESKTOP?: string;
     DATABASE_PROVIDER?: "d1" | "postgres";
     HYPERDRIVE?: {
       connectionString: string;
@@ -93,11 +97,18 @@ interface ImportMetaEnv {
   readonly POSTHOG_HOST?: string;
   readonly TURNSTILE_SITE_KEY?: string;
   readonly VITE_E2E_DOMAIN_FIXTURES?: string;
+  /** "true" in the Windows desktop app build (desktop/scripts/prepare-app.mjs). */
+  readonly VITE_OPENSEO_DESKTOP?: string;
   readonly VITE_E2E_KEYWORD_FIXTURES?: string;
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
+}
+
+declare module "*.php?raw" {
+  const content: string;
+  export default content;
 }
 
 declare module "*.md?raw" {

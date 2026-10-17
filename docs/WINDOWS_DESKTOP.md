@@ -12,6 +12,16 @@ The desktop app runs the same single-user setup as [Docker self-hosting](./SELF_
 
 The first start takes a few seconds longer while the database is created.
 
+### Setting up staff PCs
+
+Instead of pasting each key on every PC, export them once and import them on each staff PC:
+
+1. On a PC that is already set up, open **File → Settings…**, type a password of at least 8 characters under **Team setup** and click **Export team setup file…**. The file holds your DataForSEO, OpenRouter and Context.dev keys, your own Google client if you set one, and the SAM model, encrypted with that password.
+2. Send the file and the password to the staff member separately.
+3. On their PC, install OpenSEO, type the password under **Team setup** on the first screen and click **Import team setup file…**. OpenSEO saves the keys and starts.
+
+Each PC still keeps its own projects and data. Google, WordPress and other connections are made on each PC with their **Connect** buttons.
+
 ## Where your data lives
 
 Everything is stored in `%APPDATA%\OpenSEO`:
@@ -48,6 +58,10 @@ http://127.0.0.1:47321/mcp
 
 If another program is already using the port, OpenSEO switches to a free one, keeps using it from then on, and shows a notification with the new address. Update your agent connections once when that happens (and the redirect URIs, if you use a Web application Google client), or set the port back in Settings.
 
+## SAM and skills
+
+With an OpenRouter key set, **SAM** in the project sidebar runs OpenSEO's skills inside the app. Its start screen has buttons for **SEO audit**, **Project setup**, **Keyword research** and **Local SEO**. Type `/` in SAM's message box for the rest, such as `/competitor-analysis` or `/link-prospecting`. When a skill finishes, SAM saves its report to the project's **Reports** page and links it in the chat.
+
 ## Background work
 
 Rank tracking, AI visibility schedules and audit cleanup run every five minutes, as in Docker, for as long as OpenSEO is running. With the tray option on, that includes when the window is closed. Use **Quit OpenSEO** from the tray icon or the File menu to stop it completely.
@@ -65,6 +79,19 @@ Otherwise, use your own Google OAuth client. One client covers both. It takes ab
 3. Under **APIs & Services → Credentials → Create credentials → OAuth client ID**, choose **Desktop app**. It works on any local port, so there are no redirect URIs to add. (A **Web application** client also works if you add both redirect URIs shown in Settings.)
 4. Copy the client ID and client secret into **Settings → Google Search Console and Analytics** and click **Save and restart**.
 5. Click **Connect** on the Search Console or GA4 card. Google's consent page opens in your default browser; after you approve, return to the OpenSEO window and refresh (**View → Reload**), then pick your property.
+
+## WordPress sites
+
+A project can connect its WordPress site so audit fixes are applied from OpenSEO instead of in wp-admin: SEO titles and meta descriptions (Yoast SEO or Rank Math), image alt text, and setting a page to draft. Every change shows the current value first, is logged, and can be undone.
+
+1. Open the project, then **Settings → Integrations → WordPress**, enter the site's address and click **Connect WordPress**.
+2. The site's own **Authorize Application** page opens in your browser. Sign in to WordPress if asked, then click **Yes, I approve of this connection**.
+3. Your browser asks to open OpenSEO. Allow it, and the project shows the site as connected. OpenSEO never sees your WordPress login password; WordPress gives it a separate application password that you can revoke under **Users → Profile → Application Passwords**.
+4. Download the **OpenSEO Connector** plugin from the same card and install it on the site (**Plugins → Add New → Upload Plugin**, then **Activate**). OpenSEO needs it to find pages by URL and to edit Yoast SEO or Rank Math fields.
+
+After that, supported issues in **Site Audit** have a **Fix** button. The change log and **Undo** are on the WordPress card. Undo only restores a value if nobody has edited that field on the site since.
+
+Connecting works on the PC where OpenSEO is installed, because WordPress returns the approval to the app through an `openseo://` link. WordPress only offers application passwords on sites served over HTTPS.
 
 ## Troubleshooting
 
@@ -100,6 +127,14 @@ Most problems leave a clue in `%APPDATA%\OpenSEO\logs\server.log` (**File → Op
 - **`redirect_uri_mismatch`.** You're using a **Web application** client and its redirect URIs don't match OpenSEO's port. Add the two URIs shown in Settings, or switch to a **Desktop app** client, which works on any port.
 - **Signed in, but OpenSEO still says "Not connected".** Sign-in finishes in your browser. Switch back to the OpenSEO window; it refreshes after a Google sign-in. If not, use **View → Reload**. You can close the browser tab.
 - **Disconnected again after about a week.** Google expires sign-ins after seven days while the consent screen is in **Testing**. Publish the app (**Audience → Publish app**), then click **Connect** once more.
+
+### WordPress
+
+- **"Application passwords are turned off on this site".** WordPress only offers them over HTTPS, and some security plugins (Wordfence, iThemes/Solid Security) switch them off. Turn them back on in that plugin's settings.
+- **The browser doesn't offer to open OpenSEO after approving.** Install OpenSEO with the installer (not a copied folder) so Windows knows the `openseo://` link, start OpenSEO, and connect again.
+- **"The OpenSEO Connector plugin isn't active on this site".** Install and activate it from the WordPress card, then click **Check again**.
+- **"WordPress rejected OpenSEO's password".** It was revoked in WordPress. Click **Disconnect**, then connect again.
+- **The page still shows the old title after a fix.** A caching plugin or CDN is serving an old copy. Clear its cache.
 
 ## Building the installer yourself
 

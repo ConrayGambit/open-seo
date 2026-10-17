@@ -24,6 +24,8 @@ module.exports = {
   // Windows cannot execute files packed inside an asar archive.
   asar: false,
   extraResources: [{ from: "build/openseo", to: "openseo" }],
+  // WordPress returns its connection approval to openseo:// links.
+  protocols: [{ name: "OpenSEO", schemes: ["openseo"] }],
   win: {
     target: [{ target: "nsis", arch: ["x64"] }],
     icon: "build/openseo/client/android-chrome-512x512.png",

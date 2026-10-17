@@ -26,9 +26,9 @@ const SAM_SURFACE_NOTE = `> Surface note: you are SAM, running inside the OpenSE
 >
 > Your project context is already in your system prompt — read it there; there
 > is no get_project_context tool here. Write durable facts about the business
-> back with update_project_context. You have no report tools: skip any step
-> that says to deliver through the seo-report skill or to save a report, and
-> give the findings in chat, short and scannable.
+> back with update_project_context. When a skill says to deliver through the
+> seo-report skill, activate seo-report and save the report with save_report,
+> then reply in chat with the report link, the verdict and the top action.
 > If a skill step needs a tool you don't have (e.g. project creation), say so
 > and point the user at the app page rather than improvising.`;
 
@@ -52,8 +52,6 @@ function parseSkill(path: string, raw: string): SamSkill | null {
   // Public for `npx skills add` users but not an in-app workflow: it drafts
   // GitHub issues for contributors, which SAM has no surface for.
   if (frontmatter.name === "simple-issue-description") return null;
-  // SAM has no report tools, so the report-writing skill has nothing to drive.
-  if (frontmatter.name === "seo-report") return null;
   return {
     name: frontmatter.name,
     description: frontmatter.description,

@@ -14,7 +14,7 @@ import {
   SidebarMenu,
   SidebarMenuSkeleton,
 } from "@/client/components/ui/sidebar";
-import { useSamBetaOptIn } from "./samBetaOptIn";
+import { IS_DESKTOP_APP, useSamBetaOptIn } from "./samBetaOptIn";
 import { useSamSessions } from "./useSamSessions";
 
 const BETA_NOTICE_DISMISSED_KEY = "sam-beta-notice-dismissed";
@@ -28,7 +28,7 @@ function BetaNotice() {
   useEffect(() => {
     setDismissed(localStorage.getItem(BETA_NOTICE_DISMISSED_KEY) === "1");
   }, []);
-  if (dismissed) return null;
+  if (dismissed || IS_DESKTOP_APP) return null;
 
   return (
     <div className="mx-2 mb-2 rounded-lg border border-border bg-card p-3">

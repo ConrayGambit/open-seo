@@ -37,6 +37,7 @@ if (!process.argv.includes("--skip-build")) {
       // Inlined into the client bundle at build time (see vite.config.ts envPrefix).
       AUTH_MODE: "local_noauth",
       VITE_SHOW_DEVTOOLS: "false",
+      VITE_OPENSEO_DESKTOP: "true",
     },
   });
 }

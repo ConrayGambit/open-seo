@@ -32,6 +32,12 @@ export function googleAuthErrorCopy(
         title: `${what} is missing a permission`,
         description: `OpenSEO didn't get access to your ${providerLabel ?? "Google"} data because a box on Google's permission screen wasn't checked. Try again and check every box before you continue.`,
       };
+    case "wordpress_link_expired":
+      return {
+        title: "WordPress connection didn't finish",
+        description:
+          "The approval expired or was already used. Start again from Integrations in project settings and approve within 15 minutes.",
+      };
     case "connection_save_failed":
       return {
         title: `${what} didn't finish`,

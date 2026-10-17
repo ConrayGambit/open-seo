@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { sort } from "remeda";
 import {
@@ -9,6 +10,10 @@ import {
 import type { AuditResultsData } from "@/client/features/audit/results/types";
 import { SeverityBadge } from "@/client/features/audit/shared";
 import { EmptyState } from "@/client/components/EmptyState";
+import { Button } from "@/client/components/ui/button";
+import { SiteFixDialog } from "@/client/features/wordpress/SiteFixDialog";
+import { wordpressConnectionOptions } from "@/client/features/wordpress/wordpressQueries";
+import { siteFixFieldForIssue, type SiteFixField } from "@/shared/site-fixes";
 
 type AuditIssueRow = AuditResultsData["issues"][number];
 
@@ -73,14 +78,30 @@ function groupIssues(issues: AuditIssueRow[]): IssueGroup[] {
   );
 }
 
+type StartFix = (pageUrl: string, field: SiteFixField) => void;
+
 export function IssuesView({
+  projectId,
   issues,
   tabs,
 }: {
+  projectId: string;
   issues: AuditIssueRow[];
   tabs: ReactNode;
 }) {
   const groups = useMemo(() => groupIssues(issues), [issues]);
+  // Fix buttons appear once the project's WordPress site is connected.
+  const wordpressQuery = useQuery(wordpressConnectionOptions(projectId));
+  const canFix = Boolean(
+    wordpressQuery.data?.connection && wordpressQuery.data.canManage,
+  );
+  const [fixing, setFixing] = useState<{
+    pageUrl: string;
+    field: SiteFixField;
+  } | null>(null);
+  const startFix: StartFix | null = canFix
+    ? (pageUrl, field) => setFixing({ pageUrl, field })
+    : null;
 
   const sections = useMemo(
     () =>
@@ -105,18 +126,32 @@ export function IssuesView({
       ) : (
         <div>
           {sections.map((section) => (
-            <IssueSection key={section.severity} section={section} />
+            <IssueSection
+              key={section.severity}
+              section={section}
+              startFix={startFix}
+            />
           ))}
         </div>
       )}
+      {fixing ? (
+        <SiteFixDialog
+          projectId={projectId}
+          pageUrl={fixing.pageUrl}
+          field={fixing.field}
+          onClose={() => setFixing(null)}
+        />
+      ) : null}
     </div>
   );
 }
 
 function IssueSection({
   section,
+  startFix,
 }: {
   section: { severity: IssueSeverity; groups: IssueGroup[] };
+  startFix: StartFix | null;
 }) {
   const issueCount = section.groups.reduce(
     (sum, group) => sum + group.issues.length,
@@ -133,15 +168,22 @@ function IssueSection({
       </div>
       <div className="divide-y divide-border">
         {section.groups.map((group) => (
-          <IssueRow key={group.issueType} group={group} />
+          <IssueRow key={group.issueType} group={group} startFix={startFix} />
         ))}
       </div>
     </div>
   );
 }
 
-function IssueRow({ group }: { group: IssueGroup }) {
+function IssueRow({
+  group,
+  startFix,
+}: {
+  group: IssueGroup;
+  startFix: StartFix | null;
+}) {
   const [open, setOpen] = useState(false);
+  const fixField = siteFixFieldForIssue(group.issueType);
 
   return (
     <div
@@ -183,14 +225,27 @@ function IssueRow({ group }: { group: IssueGroup }) {
               <span className="text-foreground/80">{group.howToFix}</span>
             </p>
           )}
-          <AffectedUrlList issues={group.issues} />
+          <AffectedUrlList
+            issues={group.issues}
+            onFix={
+              startFix && fixField
+                ? (pageUrl) => startFix(pageUrl, fixField)
+                : null
+            }
+          />
         </div>
       )}
     </div>
   );
 }
 
-function AffectedUrlList({ issues }: { issues: AuditIssueRow[] }) {
+function AffectedUrlList({
+  issues,
+  onFix,
+}: {
+  issues: AuditIssueRow[];
+  onFix: ((pageUrl: string) => void) | null;
+}) {
   const rendered = issues.slice(0, MAX_RENDERED_URLS);
   const remaining = issues.length - rendered.length;
 
@@ -199,18 +254,29 @@ function AffectedUrlList({ issues }: { issues: AuditIssueRow[] }) {
       {rendered.map((issue) => (
         <div
           key={issue.id}
-          className="px-3 py-1.5 text-sm flex flex-col gap-0.5 border-b border-border last:border-b-0"
+          className="px-3 py-1.5 text-sm flex items-center gap-3 border-b border-border last:border-b-0"
         >
-          <a
-            className="text-foreground/80 truncate hover:underline"
-            href={issue.pageUrl}
-            target="_blank"
-            rel="noreferrer"
-            title={issue.pageUrl}
-          >
-            {issue.pageUrl}
-          </a>
-          <IssueDetails detailsJson={issue.detailsJson} />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <a
+              className="text-foreground/80 truncate hover:underline"
+              href={issue.pageUrl}
+              target="_blank"
+              rel="noreferrer"
+              title={issue.pageUrl}
+            >
+              {issue.pageUrl}
+            </a>
+            <IssueDetails detailsJson={issue.detailsJson} />
+          </div>
+          {onFix ? (
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => onFix(issue.pageUrl)}
+            >
+              Fix
+            </Button>
+          ) : null}
         </div>
       ))}
       {remaining > 0 && (

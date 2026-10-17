@@ -6,6 +6,10 @@ import { captureClientEvent } from "@/client/lib/posthog";
 // nudge toward the MCP path, not an account setting worth a schema change.
 const STORAGE_KEY = "sam-beta-opt-in";
 
+// The desktop app runs skills in SAM by design, so it skips the nudge toward
+// external agents.
+export const IS_DESKTOP_APP = import.meta.env.VITE_OPENSEO_DESKTOP === "true";
+
 // A tiny external store so the chat panel and the sidebar's Chat tab flip
 // together the moment the user opts in.
 const listeners = new Set<() => void>();
@@ -17,7 +21,7 @@ const subscribe = (listener: () => void) => {
 // that cannot read or store (private browsing, strict modes, a full quota).
 let optedInThisSession = false;
 const read = () => {
-  if (optedInThisSession) return true;
+  if (IS_DESKTOP_APP || optedInThisSession) return true;
   try {
     return localStorage.getItem(STORAGE_KEY) === "1";
   } catch {

@@ -40,6 +40,8 @@ import { Route as AppSettingsOrganizationRouteImport } from './routes/_app/setti
 import { Route as AuthenticatedOnboardingIndexRouteImport } from './routes/_authenticated.onboarding.index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
+import { Route as ApiWordpressCallbackRouteImport } from './routes/api/wordpress/callback'
+import { Route as ApiWordpressConnectorDotzipRouteImport } from './routes/api/wordpress/connector[.]zip'
 import { Route as STokenIndexRouteImport } from './routes/s/$token/index'
 import { Route as STokenOgDotpngRouteImport } from './routes/s/$token/og[.]png'
 import { Route as STokenRawRouteImport } from './routes/s/$token/raw'
@@ -227,6 +229,17 @@ const ApiAutumnSplatRoute = ApiAutumnSplatRouteImport.update({
   path: '/api/autumn/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWordpressCallbackRoute = ApiWordpressCallbackRouteImport.update({
+  id: '/api/wordpress/callback',
+  path: '/api/wordpress/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWordpressConnectorDotzipRoute =
+  ApiWordpressConnectorDotzipRouteImport.update({
+    id: '/api/wordpress/connector.zip',
+    path: '/api/wordpress/connector.zip',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const STokenIndexRoute = STokenIndexRouteImport.update({
   id: '/s/$token/',
   path: '/s/$token/',
@@ -427,6 +440,8 @@ export interface FileRoutesByFullPath {
   '/settings/organization': typeof AppSettingsOrganizationRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
+  '/api/wordpress/callback': typeof ApiWordpressCallbackRoute
+  '/api/wordpress/connector.zip': typeof ApiWordpressConnectorDotzipRoute
   '/s/$token/og.png': typeof STokenOgDotpngRoute
   '/s/$token/raw': typeof STokenRawRoute
   '/settings/': typeof AppSettingsIndexRoute
@@ -486,6 +501,8 @@ export interface FileRoutesByTo {
   '/settings/organization': typeof AppSettingsOrganizationRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
+  '/api/wordpress/callback': typeof ApiWordpressCallbackRoute
+  '/api/wordpress/connector.zip': typeof ApiWordpressConnectorDotzipRoute
   '/s/$token/og.png': typeof STokenOgDotpngRoute
   '/s/$token/raw': typeof STokenRawRoute
   '/settings': typeof AppSettingsIndexRoute
@@ -548,6 +565,8 @@ export interface FileRoutesById {
   '/_app/settings/organization': typeof AppSettingsOrganizationRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
+  '/api/wordpress/callback': typeof ApiWordpressCallbackRoute
+  '/api/wordpress/connector.zip': typeof ApiWordpressConnectorDotzipRoute
   '/s/$token/og.png': typeof STokenOgDotpngRoute
   '/s/$token/raw': typeof STokenRawRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
@@ -611,6 +630,8 @@ export interface FileRouteTypes {
     | '/settings/organization'
     | '/api/auth/$'
     | '/api/autumn/$'
+    | '/api/wordpress/callback'
+    | '/api/wordpress/connector.zip'
     | '/s/$token/og.png'
     | '/s/$token/raw'
     | '/settings/'
@@ -670,6 +691,8 @@ export interface FileRouteTypes {
     | '/settings/organization'
     | '/api/auth/$'
     | '/api/autumn/$'
+    | '/api/wordpress/callback'
+    | '/api/wordpress/connector.zip'
     | '/s/$token/og.png'
     | '/s/$token/raw'
     | '/settings'
@@ -731,6 +754,8 @@ export interface FileRouteTypes {
     | '/_app/settings/organization'
     | '/api/auth/$'
     | '/api/autumn/$'
+    | '/api/wordpress/callback'
+    | '/api/wordpress/connector.zip'
     | '/s/$token/og.png'
     | '/s/$token/raw'
     | '/_app/settings/'
@@ -780,6 +805,8 @@ export interface RootRouteChildren {
   RReportIdRoute: typeof RReportIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAutumnSplatRoute: typeof ApiAutumnSplatRoute
+  ApiWordpressCallbackRoute: typeof ApiWordpressCallbackRoute
+  ApiWordpressConnectorDotzipRoute: typeof ApiWordpressConnectorDotzipRoute
   STokenOgDotpngRoute: typeof STokenOgDotpngRoute
   STokenRawRoute: typeof STokenRawRoute
   STokenIndexRoute: typeof STokenIndexRoute
@@ -1004,6 +1031,20 @@ declare module '@tanstack/react-router' {
       path: '/api/autumn/$'
       fullPath: '/api/autumn/$'
       preLoaderRoute: typeof ApiAutumnSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/wordpress/callback': {
+      id: '/api/wordpress/callback'
+      path: '/api/wordpress/callback'
+      fullPath: '/api/wordpress/callback'
+      preLoaderRoute: typeof ApiWordpressCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/wordpress/connector.zip': {
+      id: '/api/wordpress/connector.zip'
+      path: '/api/wordpress/connector.zip'
+      fullPath: '/api/wordpress/connector.zip'
+      preLoaderRoute: typeof ApiWordpressConnectorDotzipRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/s/$token/': {
@@ -1415,6 +1456,8 @@ const rootRouteChildren: RootRouteChildren = {
   RReportIdRoute: RReportIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAutumnSplatRoute: ApiAutumnSplatRoute,
+  ApiWordpressCallbackRoute: ApiWordpressCallbackRoute,
+  ApiWordpressConnectorDotzipRoute: ApiWordpressConnectorDotzipRoute,
   STokenOgDotpngRoute: STokenOgDotpngRoute,
   STokenRawRoute: STokenRawRoute,
   STokenIndexRoute: STokenIndexRoute,

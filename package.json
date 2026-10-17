@@ -102,6 +102,7 @@
     "cn": "^0.3.0",
     "drizzle-orm": "^0.45.2",
     "fast-xml-parser": "^5.4.1",
+    "fflate": "^0.8.3",
     "htmlparser2": "^10.1.0",
     "jose": "^6.0.12",
     "lucide-react": "^0.542.0",

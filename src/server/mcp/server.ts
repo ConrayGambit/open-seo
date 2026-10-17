@@ -53,6 +53,12 @@ import {
   getSearchOpportunitiesTool,
 } from "@/server/mcp/tools/google-analytics-tools";
 import { createProjectTool } from "@/server/mcp/tools/create-project";
+import {
+  applySiteFixTool,
+  getSiteFixStateTool,
+  listSiteFixChangesTool,
+  rollbackSiteFixTool,
+} from "@/server/mcp/tools/wordpress-tools";
 import { listProjectsTool } from "@/server/mcp/tools/list-projects";
 import {
   researchProjectWebsiteTool,
@@ -250,6 +256,10 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(listBusinessCategoriesTool);
   register(getLocalRankGridTool);
   register(getKeywordMetricsTool);
+  register(getSiteFixStateTool);
+  register(applySiteFixTool);
+  register(rollbackSiteFixTool);
+  register(listSiteFixChangesTool);
   register(getSearchConsolePerformanceTool);
   register(inspectUrlsTool);
   register(getGoogleAnalyticsOrganicLandingPagesTool);
