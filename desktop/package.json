@@ -2,7 +2,7 @@
   "name": "open-seo-desktop",
   "private": true,
   "productName": "OpenSEO",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "OpenSEO as a Windows desktop app",
   "main": "src/main.cjs",
   "packageManager": "pnpm@10.30.1",

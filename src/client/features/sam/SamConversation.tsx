@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { findLast } from "remeda";
 import { toast } from "sonner";
 import { ChatComposer } from "@/client/features/sam/ChatComposer";
+import { SAM_SKILL_COMMANDS } from "@/client/features/sam/samSkillCommands";
 import { invalidateSamSessions } from "@/client/features/sam/samQueries";
 import { captureClientEvent } from "@/client/lib/posthog";
 import { ErrorState } from "@/client/components/ErrorState";
@@ -59,7 +60,7 @@ export function SamConversation({
   // send with no matching turn is a message that never reached the DO.
   const sendText = (
     text: string,
-    source: "composer" | "suggestion" | "edit" | "retry" = "composer",
+    source: "composer" | "suggestion" | "skill" | "edit" | "retry" = "composer",
   ) => {
     pinToBottom();
     captureClientEvent("sam:message_send", {
@@ -189,7 +190,10 @@ export function SamConversation({
                 and Search Console, and turn it into next steps for this
                 project.
               </p>
-              <p>Ask me anything, or start with one of these:</p>
+              <p>
+                Run a skill, ask me anything, or type / in the box below for
+                more skills:
+              </p>
             </div>
           ) : null}
 
@@ -238,6 +242,28 @@ export function SamConversation({
               onRetry={lastUserMessage ? retryLast : undefined}
               isRetrying={isBusy}
             />
+          ) : null}
+
+          {showSuggestions ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {SAM_SKILL_COMMANDS.filter((command) => command.featured).map(
+                (command) => (
+                  <button
+                    key={command.name}
+                    type="button"
+                    className="rounded-xl border border-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-accent"
+                    onClick={() => sendText(`/${command.name}`, "skill")}
+                  >
+                    <span className="block text-sm font-medium">
+                      {command.label}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {command.description}
+                    </span>
+                  </button>
+                ),
+              )}
+            </div>
           ) : null}
 
           {showSuggestions ? (

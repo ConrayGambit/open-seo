@@ -37,6 +37,11 @@ window.openseoDesktop.getSettings().then((settings) => {
     $("GOOGLE_CLIENT_ID").placeholder = settings.googleClientId;
     $("google").open = true;
   }
+  if (!firstRun && settings.hasDataforseoKey) {
+    $("team-export").hidden = false;
+    $("team-lead").textContent =
+      "Export your keys to a file locked with a password, so staff can import them on their PC. Send the file and the password separately. Or import a file here.";
+  }
   if (!firstRun) {
     $("title").textContent = "Settings";
     $("lead").textContent = "Saving restarts the local OpenSEO server.";
@@ -64,3 +69,24 @@ $("form").addEventListener("submit", async (event) => {
     $("save").disabled = false;
   }
 });
+
+async function runTeamAction(button, action) {
+  $("team-status").textContent = "";
+  $("team-status").classList.remove("error");
+  button.disabled = true;
+  const result = await action($("team-password").value);
+  button.disabled = false;
+  if (result.ok && result.filePath)
+    $("team-status").textContent = `Saved to ${result.filePath}`;
+  if (!result.ok && result.error) {
+    $("team-status").textContent = result.error;
+    $("team-status").classList.add("error");
+  }
+}
+
+$("team-import").addEventListener("click", () =>
+  runTeamAction($("team-import"), window.openseoDesktop.importTeamSetup),
+);
+$("team-export").addEventListener("click", () =>
+  runTeamAction($("team-export"), window.openseoDesktop.exportTeamSetup),
+);

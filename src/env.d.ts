@@ -97,6 +97,8 @@ interface ImportMetaEnv {
   readonly POSTHOG_HOST?: string;
   readonly TURNSTILE_SITE_KEY?: string;
   readonly VITE_E2E_DOMAIN_FIXTURES?: string;
+  /** "true" in the Windows desktop app build (desktop/scripts/prepare-app.mjs). */
+  readonly VITE_OPENSEO_DESKTOP?: string;
   readonly VITE_E2E_KEYWORD_FIXTURES?: string;
 }
 

@@ -12,6 +12,16 @@ The desktop app runs the same single-user setup as [Docker self-hosting](./SELF_
 
 The first start takes a few seconds longer while the database is created.
 
+### Setting up staff PCs
+
+Instead of pasting each key on every PC, export them once and import them on each staff PC:
+
+1. On a PC that is already set up, open **File → Settings…**, type a password of at least 8 characters under **Team setup** and click **Export team setup file…**. The file holds your DataForSEO, OpenRouter and Context.dev keys, your own Google client if you set one, and the SAM model, encrypted with that password.
+2. Send the file and the password to the staff member separately.
+3. On their PC, install OpenSEO, type the password under **Team setup** on the first screen and click **Import team setup file…**. OpenSEO saves the keys and starts.
+
+Each PC still keeps its own projects and data. Google, WordPress and other connections are made on each PC with their **Connect** buttons.
+
 ## Where your data lives
 
 Everything is stored in `%APPDATA%\OpenSEO`:
@@ -47,6 +57,10 @@ http://127.0.0.1:47321/mcp
 ```
 
 If another program is already using the port, OpenSEO switches to a free one, keeps using it from then on, and shows a notification with the new address. Update your agent connections once when that happens (and the redirect URIs, if you use a Web application Google client), or set the port back in Settings.
+
+## SAM and skills
+
+With an OpenRouter key set, **SAM** in the project sidebar runs OpenSEO's skills inside the app. Its start screen has buttons for **SEO audit**, **Project setup**, **Keyword research** and **Local SEO**. Type `/` in SAM's message box for the rest, such as `/competitor-analysis` or `/link-prospecting`. When a skill finishes, SAM saves its report to the project's **Reports** page and links it in the chat.
 
 ## Background work
 

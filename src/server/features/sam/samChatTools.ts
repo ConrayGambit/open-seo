@@ -77,6 +77,12 @@ import {
 } from "@/server/mcp/tools/search-console-tools";
 import { whoamiTool } from "@/server/mcp/tools/whoami";
 import { explorePromptTool } from "@/server/mcp/tools/explore-prompt";
+import {
+  getReportTool,
+  listReportsTool,
+  saveReportTool,
+} from "@/server/mcp/tools/report-tools";
+import { listReportTemplatesTool } from "@/server/mcp/tools/report-template-tools";
 import { discoverSiteUrls, readPages, readSite } from "@/server/lib/scrape";
 import { capToolOutput } from "@/server/features/sam/samToolOutput";
 import openSeoFactSheet from "@/server/features/sam/openseo-fact-sheet.md?raw";
@@ -460,5 +466,11 @@ export function buildSamMcpTools(
     get_audit_status: waitingAuditStatusTool(adaptTool),
     get_audit_issues: adaptTool(getAuditIssuesTool),
     get_audit_pages: adaptTool(getAuditPagesTool),
+    // Skill runs end in a saved report (the seo-report skill), so findings
+    // land on the Reports page instead of only in the chat.
+    save_report: adaptTool(saveReportTool),
+    list_reports: adaptTool(listReportsTool),
+    get_report: adaptTool(getReportTool),
+    list_report_templates: adaptTool(listReportTemplatesTool),
   };
 }

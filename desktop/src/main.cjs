@@ -21,6 +21,7 @@ const fs = require("node:fs");
 const net = require("node:net");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
+const { openTeamSetup, sealTeamSetup } = require("./team-setup.cjs");
 
 const PREFERRED_PORT = 47321;
 const HEALTH_TIMEOUT_MS = 120_000;
@@ -822,12 +823,65 @@ ipcMain.handle("settings:save", async (_event, input) => {
   if (!settings.DATAFORSEO_API_KEY)
     return { ok: false, error: "A DataForSEO API key is required." };
   saveSettings(settings);
+  await applySavedSettings();
+  return { ok: true };
+});
 
-  // Start (which opens the main window) before closing the settings window,
-  // so closing it never leaves zero windows and quits the app.
+// Start (which opens the main window) before closing the settings window,
+// so closing it never leaves zero windows and quits the app.
+async function applySavedSettings() {
   const started = server ? restart() : mainWindow ? null : launch();
   setupWindow?.close();
   await started;
+}
+
+const TEAM_FILE_FILTERS = [
+  { name: "OpenSEO team setup", extensions: ["openseo-team"] },
+];
+
+ipcMain.handle("team:export", async (_event, password) => {
+  const settings = loadSettings();
+  if (!settings.DATAFORSEO_API_KEY)
+    return { ok: false, error: "Save a DataForSEO key before exporting." };
+  let sealed;
+  try {
+    sealed = sealTeamSetup(settings, String(password ?? ""));
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+  const { canceled, filePath } = await dialog.showSaveDialog(setupWindow, {
+    title: "Export team setup",
+    defaultPath: "OpenSEO team setup.openseo-team",
+    filters: TEAM_FILE_FILTERS,
+  });
+  if (canceled || !filePath) return { ok: false, error: "" };
+  fs.writeFileSync(filePath, sealed);
+  return { ok: true, filePath };
+});
+
+ipcMain.handle("team:import", async (_event, password) => {
+  const { canceled, filePaths } = await dialog.showOpenDialog(setupWindow, {
+    title: "Import team setup",
+    filters: TEAM_FILE_FILTERS,
+    properties: ["openFile"],
+  });
+  if (canceled || !filePaths[0]) return { ok: false, error: "" };
+  let values;
+  try {
+    values = openTeamSetup(
+      fs.readFileSync(filePaths[0], "utf8"),
+      String(password ?? ""),
+    );
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+  if (!values.DATAFORSEO_API_KEY)
+    return { ok: false, error: "This file has no DataForSEO key in it." };
+  const settings = loadSettings();
+  Object.assign(settings, values);
+  if (!SAM_MODELS.includes(settings.samModel)) settings.samModel = "";
+  saveSettings(settings);
+  await applySavedSettings();
   return { ok: true };
 });
 

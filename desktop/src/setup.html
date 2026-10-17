@@ -137,6 +137,24 @@
         opacity: 0.6;
         cursor: default;
       }
+      button.secondary {
+        background: transparent;
+        color: var(--fg);
+        border-color: var(--border);
+      }
+      .team {
+        margin-top: 16px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 4px 14px 14px;
+        background: var(--panel);
+      }
+      .team .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
       .error {
         color: var(--danger);
       }
@@ -153,6 +171,28 @@
     <p class="lead" id="lead">
       OpenSEO runs entirely on this PC. Add your DataForSEO key to get started.
     </p>
+
+    <section class="team">
+      <label for="team-password">Team setup</label>
+      <p class="hint" id="team-lead">
+        Got a team setup file? Enter its password and import it to fill in every
+        key at once.
+      </p>
+      <input
+        id="team-password"
+        type="password"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Team setup password"
+      />
+      <div class="row">
+        <button id="team-import" type="button">Import team setup file…</button>
+        <button id="team-export" type="button" class="secondary" hidden>
+          Export team setup file…
+        </button>
+      </div>
+      <p class="hint" id="team-status"></p>
+    </section>
 
     <form id="form">
       <label for="dataforseo"
